@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    
+    <a href="/">Add</a>
+    <a href="/subtract">Subtract</a>
+    <a href="/multiply">Multiply</a>
+    <a href="/divide">Divide</a>
+
+    <% if(error) { %>
+      <%= error %>
+    <% } %>
+
+    <form action="/" method="get">
+      <label for="number1">Num1</label>
+      <input type="number" name="number1">
+      <br/>
+      <label for="number2">Num2</label>
+      <input type="number" name="number2">
+      <button type="submit">Add!</button>
+    </form>
+
+    <% if(!isNaN(result)) { %>
+      <b>ANS:</b><%= result %>
+    <% } %>
+    
+  </body>
+</html>
+
+
