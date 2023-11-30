@@ -7,20 +7,21 @@ service ShedMonitoring {
 }
 
 message envData {
-    double temperature = 1;
-    double humidity = 2;
-    double ammonia = 3;
-    string waterQuality = 4; 
-    int32 waterQuanity = 5;
+    int32 temperature = 1;
+    int32 humidity = 2;
+    string waterQuality = 3; 
+    int32 waterQuantity = 4;
+    int32 ammonia = 5;
 }
 
 message shedAction {
-    bool tempIncrease = 1;
-    bool tempDecrease = 2;
-    bool activateDehumidifier = 3;
-    bool addWater = 4;
-    bool adjustFood = 5;
-    string alerMessage = 6;
+    string alertMessage = 1;
+    int32 tempIncrease = 2;
+    int32 tempDecrease = 3;
+    int32 activateDehumidifier = 4;
+    int32 deactivateDehumidifier = 5;
+    int32 addWater = 6;
+	int32 adjustFood = 7;
 }
 
 service GrazingMonitoring {

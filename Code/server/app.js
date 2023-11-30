@@ -8,119 +8,144 @@ var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle
 
 
 //client-side streaming
+//once data from client is passed in, alert message is adjusted accordingly and returned to web browser
 function shedData(call, callback){
-    try{
-        var number1 = parseInt(call.request.number1)
-        var number2 = parseInt(call.request.number2)
-        if(!isNaN(number1) && !isNaN(number2)){
-            var result = number1 + number2
-            callback(null, {
-                message: undefined,
-                result: result
-            })
-        } else {
-            callback(null, {
-                message: "Please specify two numbers"
-            })
-        }
-    } catch (e) {
-        callback(null, {
-            message: "An error occurred during computation"
-        })
-    }  
-}
-  /*var tempIncrease = false;
-  var tempDecrease = false;
-  var activateDehumidifier = false;
-  var addWater = false;
-  var adjustFood = false;
-  var alertMessage = "Actions taken: ";
 
-  call.on('router', function(request){
-    if(request.temperature < 20.00){
-      tempIncrease = true;
-      alertMessage += "temperature increased, ";
-    }
+  var tempIncrease = 0;
+  var tempDecrease = 0;
+  var activateDehumidifier = 0;
+  var deactivateDehumidifier = 0;
+  var addWater = 0;
+  var adjustFood = 0;
+  var alertMessage = "";
 
-    if(request.temperature > 27.00){
-      tempDecrease = true;
-      alertMessage += "temperature decreased, ";
+  call.on('data', function(request){
+
+    if(request.temperature < 20){
+      tempIncrease++;
+      if(tempIncrease > 2) {
+        alertMessage += "temperature increased, ";
+      }
+    } 
+
+    if(request.temperature > 27){
+      tempDecrease++;
+      if(tempDecrease > 2) {
+        alertMessage += "temperature decreased, ";
+      }
     }
     
     if(request.humidity > 70){
-      activateDehumidifier = true;
-      alertMessage += "dehumidifier activated, ";
+      activateDehumidifier++;
+      if(activateDehumidifier > 2) {
+        alertMessage += "dehumidifier activated, ";
+      }
     }
 
     if(request.humidity < 40){
-      activateDehumidifier = false;
-      alertMessage += "dehumidifier deactivated, ";
+      deactivateDehumidifier++;
+      if(deactivateDehumidifier > 2) {
+        alertMessage += "dehumidifier dectivated, ";
+      }
     }
 
-    if(request.waterQuality === "poor" || request.waterQuantity < 4){
-      addWater = true;
-      alertMessage += "water added, ";
+    if(request.waterQuality === "poor" || request.waterQuantity < 3){
+      addWater++;
+      if(addWater > 2) {
+        alertMessage += "water checked , ";
+      }
     }
 
-    if(request.ammonia > 30.00){
-      adjustFood = true;
-      alertMessage += "food adjusted to combat ammonia, ";
+    if(request.ammonia > 40){
+      adjustFood++;
+      if(adjustFood > 2) {
+        alertMessage += "food adjusted to combat ammonia, ";
+      }
     }
-
   })
 
   call.on("end", function(){
     callback(null, {
-      alertMessage: alertMessage,
+      alertMessage:alertMessage
     })
   })
 
   call.on('error', function(e){
-    console.log("An error occured")
+    console.log(e)
   })
-}*/
+}
 
-/*//server-side streaming
-var news = [
+//server-side streaming
+var data = [
   {
     category: "Weather alert",
-    news: "Placeholder"
+    news: "URL 1"
   },
   {
     category: "System update",
-    news: "Placeholder"
+    news: "URL 2"
   },
   {
     category: "Current news",
-    news: "Placeholder"
+    news: "URL 3"
   },
   {
     category: "Privacy & Legal",
-    news: "Placeholder"
+    news: "URL 4"
   },
   {
     category: "Statistics",
-    news: "Placeholder"
+    news: "URL 5"
   }
 ]
 
 function getNewsAlerts(call, callback) {
-  for(var i = 0; i < news.length; i++){
+  for(var i = 0; i < data.length; i++){
     call.write({
-      category: news[i].category,
-      news: news[i].news
+      category: data[i].category,
+      news: data[i].news
     })
   }
   call.end()
-}*/
+}
+
 
 //bidirectional streaming*/
+var cattles = {
+}
 
+function grazingLocation(call) {
+  call.on('data', function(locationMsg){
+
+    if(!(locationMsg.name in cattles)){
+        cattles[locationMsg.name] = {
+        name: locationMsg.name,
+        call: call,
+      }
+    }
+
+      for (var cattle in cattles) {
+          cattles[cattle].call.write({
+          location: locationMsg.location,
+          message: locationMsg.message,
+          name: locationMsg.name,
+        })
+      }
+  });
+
+  call.on('end', function() {
+    call.end();
+  });
+
+  call.on('error', function(e){
+    console.log(e);
+  })
+}
 
 var server = new grpc.Server()
 server.addService(cattle_proto.ShedMonitoring.service, {shedData:shedData});
-//server.addService(cattle_proto.GrazingMonitoring.service, {grazingLocation:grazingLocation});
-//server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts});
+server.addService(cattle_proto.GrazingMonitoring.service, {grazingLocation:grazingLocation});
+server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts});
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()
 })

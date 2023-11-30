@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package cattle;
+
+service ShedMonitoring {
+    rpc shedData(stream envData) returns (shedAction){}
+}
+
+message envData {
+    int32 temperature = 1;
+    int32 humidity = 2;
+    string waterQuality = 3; 
+    int32 waterQuantity = 4;
+    int32 ammonia = 5;
+}
+
+message shedAction {
+    string alertMessage = 1;
+    int32 tempIncrease = 2;
+    int32 tempDecrease = 3;
+    int32 activateDehumidifier = 4;
+    int32 deactivateDehumidifier = 5;
+    int32 addWater = 6;
+	int32 adjustFood = 7;
+}
+
+service GrazingMonitoring {
+    rpc grazingLocation(stream location) returns (stream location) {}
+}
+
+message location {
+    string name =1;
+    string message = 2;
+    int32 location = 3;
+}
+
+service NewsAlerts {
+    rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
+}
+
+message NewsRequest{
+}
+
+message NewsResponse{
+    string category = 1;
+    string news = 2;
+}

@@ -6,28 +6,23 @@
   </head>
   <body>
     <h1><%= title %></h1>
-    
-    <a href="/">Add</a>
-    <a href="/subtract">Subtract</a>
-    <a href="/multiply">Multiply</a>
-    <a href="/divide">Divide</a>
+
+    <a href="/">Shed</a>
+    <a href="/news">News</a>
+
 
     <% if(error) { %>
       <%= error %>
     <% } %>
 
     <form action="/" method="get">
-      <label for="number1">Num1</label>
-      <input type="number" name="number1">
-      <br/>
-      <label for="number2">Num2</label>
-      <input type="number" name="number2">
-      <button type="submit">Add!</button>
+      <button type="submit">Submit!</button>
     </form>
 
-    <% if(!isNaN(result)) { %>
-      <b>ANS:</b><%= result %>
-    <% } %>
+    <!-- Ideally the alertMessage should show here after get is called when clicking on above button -->
+    <b>Actions taken:</b>
+    <%= alertMessage %>
+  
     
   </body>
 </html>
