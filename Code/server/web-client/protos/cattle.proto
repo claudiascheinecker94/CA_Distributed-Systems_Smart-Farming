@@ -9,7 +9,7 @@ service ShedMonitoring {
 message envData {
     int32 temperature = 1;
     int32 humidity = 2;
-    string waterQuality = 3; 
+    int32 waterQuality = 3; 
     int32 waterQuantity = 4;
     int32 ammonia = 5;
 }

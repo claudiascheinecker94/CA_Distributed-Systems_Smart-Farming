@@ -23,7 +23,7 @@ function shedData(call, callback){
 
     if(request.temperature < 20){
       tempIncrease++;
-      if(tempIncrease > 2) {
+      if(tempIncrease > 3) {
         alertMessage += "temperature increased, ";
       }
     } 
@@ -44,14 +44,14 @@ function shedData(call, callback){
 
     if(request.humidity < 40){
       deactivateDehumidifier++;
-      if(deactivateDehumidifier > 2) {
+      if(deactivateDehumidifier > 3) {
         alertMessage += "dehumidifier deactivated, ";
       }
     }
 
-    if(request.waterQuality === "poor" || request.waterQuantity < 3){
+    if(request.waterQuality = 1 || request.waterQuantity < 4){
       addWater++;
-      if(addWater > 2) {
+      if(addWater > 6) {
         alertMessage += "water checked, ";
       }
     }
@@ -76,32 +76,21 @@ function shedData(call, callback){
 }
 
 //server-side streaming
-var news = [{category: "Weather alert", url: "URL 1"},{category: "System update",url: "URL 2"},{category: "Current news",url: "URL 3"},{category: "Privacy & Legal",url: "URL 4"},{category: "Statistics",url: "URL 5"}]
+var news = [{category: "Weather", url: "Check Recent Storm Alerts"},{category: "System & Maintenance",url: "Check Smart Farming Updates"},{category: "Current News",url: "Check Latest News Articles"},{category: "Privacy & Legal",url: "Check Latest Cattle Regulation Changes"},{category: "Statistics",url: "Check 2023 CSO Statistics"}]
 
 function getNewsAlerts(call, callback) {
-  for(var i = 0; i < news.length; i++){
-    call.write({
-      category: news[i].category,
-      url: news[i].url,
-    });
-  }
+  //var newsUpdate = setInterval(() => {
+    for(var i = 0; i < news.length; i++){
+        call.write({
+          category: news[i].category,
+          url: news[i].url,
+        });
+      }
+    //}, 2000);
+
   call.end()
+  //clearInterval(newsUpdate);
 }
-
-/*function getNewsAlerts(call, callback){
-  for(var i=0; i<3; i++){
-    var newsUpdate = setInterval(() => {
-      var category = Math.random() *10;
-  
-            call.write({
-              category: category
-            });
-          }, 2000); 
-        }
-      call.end();
-      clearInterval(newsUpdate);//adjusting intervals
-}*/
-
 
 
 

@@ -31,8 +31,29 @@
     <br>
     <br>
     <div id="text-part">
-         <%= category %>
-         <%= url%>
+      <table>
+          <tr>
+            <td><b><%= newsItems[0].category %></b></td>
+            <td><a href="https://www.met.ie/forecasts/national-forecast"><%= newsItems[0].url %></a></td>
+          </tr>
+          <tr>
+            <td><b><%= newsItems[1].category %></b></td>
+            <td><a href="https://www.ifa.ie/resources/smart-farming-farm-apps/"><%= newsItems[1].url %></a></td>
+          </tr>
+          <tr>
+            <td><b><%= newsItems[2].category %></b></td>
+            <td><a href="https://www.agriland.ie/"><%= newsItems[2].url %></a></td>
+          </tr>
+          <tr>
+            <td><b><%= newsItems[3].category %></b></td>
+            <td><a href="https://animallaw.ie/farm-animals/"><%= newsItems[3].url %></a></td>
+          </tr>
+          <tr>
+            <td><b><%= newsItems[4].category %></b></td>
+            <td><a href="https://www.cso.ie/en/releasesandpublications/ep/p-clsjp/cropsandlivestockprovisionaljune2022/#:~:text=Cattle%20Numbers-,The%20total%20cattle%20numbers%20were%20up%20by%2037%2C300%20(%2B0.5,by%2017%2C000%20(%2B2.4%25)."><%= newsItems[4].url %></a></td>
+          </tr>
+     </table>
+        
     </div>
        
   </body>

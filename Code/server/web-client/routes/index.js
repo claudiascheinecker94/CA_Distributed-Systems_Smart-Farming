@@ -27,7 +27,7 @@ router.get('/', function(req, res, next) {
     var temperature = Math.random() * 40;
     var humidity = Math.random() * 100;
     var ammonia = Math.random() * 50;
-    var waterQuality = "good";
+    var waterQuality = Math.random() * 2;
     var waterQuantity = Math.random() * 10;
       
     call.write({
@@ -45,13 +45,14 @@ router.get('/', function(req, res, next) {
 router.get('/news', function(req, res, next) {
   
   var call = client.getNewsAlerts({});
+  var newsItems = [];
 
   call.on('data', function(response){
-      res.render('news', {category:response.category, url:response.url});
+      newsItems.push({category: response.category, url:response.url});
   });
 
   call.on('end', function(){
-
+    res.render('news', {newsItems:newsItems});
   });
 
   call.on('error', function(e){
@@ -62,7 +63,6 @@ router.get('/news', function(req, res, next) {
 //---bidirectional streaming---
 
 router.get('/location', function(req, res) {
-  //---bidirectional streaming---
   var name = req.query.name;
   //readlineSync.question("Who is leaving the shed? ")
   var call = location.grazingLocation();

@@ -17,6 +17,10 @@ a {
   text-decoration:none;
 }
 
+td {
+  width: 400px;
+}
+
 #upper-bar{
   display: flex;
   justify-content: space-around;
@@ -89,3 +93,4 @@ a {
   font-size: 14px;
   border-radius: 12px;
 }
+
