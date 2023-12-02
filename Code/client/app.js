@@ -77,6 +77,7 @@ call.write({
 //Set up interval to send location updates
 var locationUpdate = setInterval(() => {
 var location = Math.random() *10;
+
   call.write({
     message: name + " is safely grazing",
     name: name,

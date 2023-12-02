@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
-    
     <div id="upper-bar">
       <div class="link" id="one"><a href="/">Shed</a></div>
       <div class="link" id="two"><a href="/news">News</a></div>
@@ -31,17 +30,14 @@
     <br>
     <br>
     <div id="text-part">
-      <p>Real time data is sent from various sensors installed within the cattle shed at regular intervals. Measurements are taken 5 times a day and responsive actions are automatically implemented daily to ensure that shed conditions remain at peek.</p>
-      <p>To check what actions have been triggered, please click the button below</p>
-      <% if(error) { %>
-        <%= error %>
-      <% } %>
-      <br>
-      <br>
-      <br>
+      <p>This service helps to track the real-time grazing locations of a herd. It will log each individual cattle's location an give real-time updates on each respective animal's position based on set geofencing and environmental stability.</p>
+      <p>Once an animal reaches a location that is deemed unsafe, mitigation efforts will be put in place to guide the animal back to the herd.This service helps to track the real-time grazing locations of a herd. It will log each individual cattle's location an give real-time updates on its position based on set geofencing and environmental stability.</p>
+      <p>This helps with remote monitoring efforts as well as minimises the loss of cattle.</p>
       <div>
-        <form action="/" method="get">
-          <button class="button" type="submit">Check daily actions</button>
+        <form>
+          <label for="name">Cattle-ID</label>
+          <input type="text" name="name">
+          <button class="button" type="submit">Track location</button>
         </form>
       </div>
     </div>
@@ -49,14 +45,7 @@
     <br>
     <br>
     <div id="text-part">
-      <b>Actions taken:</b>
-      <%= alertMessage %>
+      <b>Location Tracking:</b>
     </div>
-      
-  
-  
-    
   </body>
 </html>
-
-

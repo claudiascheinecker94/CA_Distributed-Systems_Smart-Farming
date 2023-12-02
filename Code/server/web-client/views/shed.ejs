@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    
+    <div id="upper-bar">
+        <div class="link" id="one"><a href="/">Main</a></div>
+        <div class="link" id="two"><a href="/shed">Shed</a></div>
+        <div class="link" id="three"><a href="/news">News</a></div>
+        <div class="link" id="four"><a href="/location">Location</a></div>
+      </div>
+    
+    <h1><%= title %></h1>
+
+    <% if(error) { %>
+      <%= error %>
+    <% } %>
+
+    <form action="/shed" method="get">
+      <button type="submit">Submit!</button>
+    </form>
+
+    <!-- Ideally the alertMessage should show here after get is called when clicking on above button -->
+    <b>Actions taken:</b>
+    <%= alertMessage %>
+    
+  
+    
+  </body>
+</html>

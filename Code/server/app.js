@@ -45,14 +45,14 @@ function shedData(call, callback){
     if(request.humidity < 40){
       deactivateDehumidifier++;
       if(deactivateDehumidifier > 2) {
-        alertMessage += "dehumidifier dectivated, ";
+        alertMessage += "dehumidifier deactivated, ";
       }
     }
 
     if(request.waterQuality === "poor" || request.waterQuantity < 3){
       addWater++;
       if(addWater > 2) {
-        alertMessage += "water checked , ";
+        alertMessage += "water checked, ";
       }
     }
 
@@ -76,45 +76,41 @@ function shedData(call, callback){
 }
 
 //server-side streaming
-var data = [
-  {
-    category: "Weather alert",
-    news: "URL 1"
-  },
-  {
-    category: "System update",
-    news: "URL 2"
-  },
-  {
-    category: "Current news",
-    news: "URL 3"
-  },
-  {
-    category: "Privacy & Legal",
-    news: "URL 4"
-  },
-  {
-    category: "Statistics",
-    news: "URL 5"
-  }
-]
+var news = [{category: "Weather alert", url: "URL 1"},{category: "System update",url: "URL 2"},{category: "Current news",url: "URL 3"},{category: "Privacy & Legal",url: "URL 4"},{category: "Statistics",url: "URL 5"}]
 
 function getNewsAlerts(call, callback) {
-  for(var i = 0; i < data.length; i++){
+  for(var i = 0; i < news.length; i++){
     call.write({
-      category: data[i].category,
-      news: data[i].news
-    })
+      category: news[i].category,
+      url: news[i].url,
+    });
   }
   call.end()
 }
+
+/*function getNewsAlerts(call, callback){
+  for(var i=0; i<3; i++){
+    var newsUpdate = setInterval(() => {
+      var category = Math.random() *10;
+  
+            call.write({
+              category: category
+            });
+          }, 2000); 
+        }
+      call.end();
+      clearInterval(newsUpdate);//adjusting intervals
+}*/
+
+
+
 
 
 //bidirectional streaming*/
 var cattles = {
 }
 
-function grazingLocation(call) {
+function grazingLocation(call, callback) {
   call.on('data', function(locationMsg){
 
     if(!(locationMsg.name in cattles)){
@@ -124,13 +120,13 @@ function grazingLocation(call) {
       }
     }
 
-      for (var cattle in cattles) {
-          cattles[cattle].call.write({
-          location: locationMsg.location,
-          message: locationMsg.message,
-          name: locationMsg.name,
-        })
-      }
+    for (var cattle in cattles) {
+        cattles[cattle].call.write({
+        location: locationMsg.location,
+        message: locationMsg.message,
+        name: locationMsg.name,
+      })
+    }
   });
 
   call.on('end', function() {

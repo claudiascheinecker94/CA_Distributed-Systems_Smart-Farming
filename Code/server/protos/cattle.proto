@@ -43,5 +43,5 @@ message NewsRequest{
 
 message NewsResponse{
     string category = 1;
-    string news = 2;
+    string url = 2;
 }
