@@ -7,19 +7,46 @@ var readlineSync = require('readline-sync')
 var PROTO_PATH = __dirname + "/../protos/cattle.proto";
 var packageDefinition = protoLoader.loadSync(PROTO_PATH);
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle;
-var shed = new cattle_proto.ShedMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
+var shed = new cattle_proto.CattleMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var client = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var location = new cattle_proto.GrazingMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 
+router.use((req, res, next) =>{
+  console.log(`${req.method}:${req.url}`)
+  next();
+})
 /* GET home page. */
-//creating random variables as data, calling the shedData function and passing in the data, when call ends, the alertMessage should be returned and displayed on the web browser
+//unary grpc
 router.get('/', function(req, res, next) {
+  var tagId = req.query.tagId;
+
+  if (tagId >= 1) {
+    try {
+      shed.cattleData({tagId: tagId}, function (error, response) {
+        try {
+          res.render('index', {title: 'Animal Welfare Check', error: error, tagId:response.tagId, age: response.age, weight: response.weight, healthStatus:response.healthStatus, heatDetection:response.heatDetection});
+        } catch (error) {
+          console.log(error);
+          res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information', age: null});
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information', age: null});
+    }
+  } else {
+    res.render('index', {title: 'Animal Welfare Check', error: 'Awaiting Tag-ID', age: null});
+  }
+});
+
+//client-side streaming
+router.get('/shed', function(req, res, next) {
   
   var call = shed.shedData(function(error, response){
     if(error){
         console.log("An error occured")
     } else {
-        res.render('index', {title: 'Shed Monitoring', error: error, alertMessage: response.alertMessage});
+        res.render('shed', {title: 'Shed Monitoring', error: error, alertMessage: response.alertMessage});
     }
   })
 
@@ -42,6 +69,7 @@ router.get('/', function(req, res, next) {
   call.end();
 });
 
+//server-side streaming
 router.get('/news', function(req, res, next) {
   
   var call = client.getNewsAlerts({});
@@ -62,10 +90,24 @@ router.get('/news', function(req, res, next) {
 
 //---bidirectional streaming---
 
-router.get('/location', function(req, res) {
-  var name = req.query.name;
+router.get('/location', function(req, res, next) {
+  var name = "test";
+  //var name = req.query.name;
   //readlineSync.question("Who is leaving the shed? ")
   var call = location.grazingLocation();
+
+  call.on('data', function(response) {
+    //res.render('location', {title: 'Location', name:response.name, message:response.message, location:response.location});
+    console.log(response.message + " at location " + response.location)
+  });
+
+  call.on('end', function(){
+    clearInterval(locationUpdate);
+  });
+
+  call.on("error", function(e){
+      console.log("Cannot connect to server")
+  });
 
   //Send initial message
   call.write({
@@ -101,18 +143,6 @@ router.get('/location', function(req, res) {
     }
   }, 2000); //adjusting intervals
 
-  call.on('data', function(response) {
-      res.render('location', {title: 'Location', name:response.name, message:response.message, location:response.location});
-      //console.log(resp.message + " at location " + resp.location)
-  });
-
-  call.on('end', function(){
-    clearInterval(locationUpdate);
-  });
-
-  call.on("error", function(e){
-      console.log("Cannot connect to server")
-  });
 });
 
 module.exports = router;

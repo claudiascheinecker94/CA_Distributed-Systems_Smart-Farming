@@ -10,9 +10,10 @@
   <body>
     
     <div id="upper-bar">
-      <div class="link" id="one"><a href="/">Shed</a></div>
-      <div class="link" id="two"><a href="/news">News</a></div>
-      <div class="link" id="three"><a href="/location">Location</a></div>
+      <div class="link" id="one"><a href="/">Cattle</a></div>
+      <div class="link" id="two"><a href="/shed">Shed</a></div>
+      <div class="link" id="three"><a href="/location">Grazing</a></div>
+      <div class="link" id="four"><a href="/news">News</a></div>
     </div>
     <br>
     <br>
@@ -31,17 +32,16 @@
     <br>
     <br>
     <div id="text-part">
-      <p>Real time data is sent from various sensors installed within the cattle shed at regular intervals. Measurements are taken 5 times a day and responsive actions are automatically implemented daily to ensure that shed conditions remain at peek.</p>
-      <p>To check what actions have been triggered, please click the button below</p>
-      <% if(error) { %>
-        <%= error %>
-      <% } %>
+      <p>Health and welfare information of each animal is continously measured and stored to spot possible outbreaks of disease in its early stages. Fertility is strictly measured as well in order to time insemination.</p>
+      <p>To check on the health and welfare of the individual animal, please provide the tag id of the respective cattle.</p>
       <br>
       <br>
       <br>
       <div>
         <form action="/" method="get">
-          <button class="button" type="submit">Check daily actions</button>
+          <label for="tagId">Tag-ID</label>
+          <input type="number" name="tagId">
+          <button class="button" type="submit" onclick="">Check health data</button>
         </form>
       </div>
     </div>
@@ -49,13 +49,18 @@
     <br>
     <br>
     <div id="text-part">
-      <b>Actions taken:</b>
-      <%= alertMessage %>
+      <b>Cattle Information:</b>
+      <br>
+      <ul><% if(error) { %>
+        <%= error %>
+      <% } else { %>
+        <li>Tag-ID: <%= tagId %></li>
+        <li>Age: <%= age %></li>
+        <li>Weight: <%= weight %></li>
+        <li>Health Status: <%= healthStatus %></li>
+        <li>Heat Detection: <%= heatDetection %></li>
+      <% } %></ul>
     </div>
-      
-  
-  
-    
   </body>
 </html>
 

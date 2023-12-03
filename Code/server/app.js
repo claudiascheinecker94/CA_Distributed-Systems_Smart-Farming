@@ -6,6 +6,54 @@ var packageDefinition = protoLoader.loadSync(
 )
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle
 
+//unary grpc
+
+function cattleData(call, callback){
+
+  try{
+    var tagId = parseInt(call.request.tagId)
+    if(!isNaN(tagId)){
+        var age = Math.floor(Math.random() * 10 + 1);
+        var weight = Math.floor(Math.random() * (1500 - 700) + 700);
+        var healthStatus;
+        var healthStatusGenerator = Math.floor(Math.random() * 2);
+        var heatDetection;
+        var heatDetectionGenerator = Math.floor(Math.random() * 2);
+
+        if (healthStatusGenerator === 0){
+          healthStatus = "no data yet";
+        } else if (healthStatusGenerator === 1) {
+          healthStatus = "good health";
+        } else {
+          healthStatus = "health issues - please consult vet"
+        }
+
+        if (heatDetectionGenerator === 0){
+          heatDetection = "not in heat";
+        } else if (heatDetectionGenerator === 1) {
+          heatDetection = "in heat";
+        } else {
+          heatDetection = "pregnant";
+        }
+
+        callback(null, {
+          tagId:tagId,
+          age:age,
+          weight:weight,
+          healthStatus:healthStatus,
+          heatDetection:heatDetection,
+        })
+    } else {
+        callback(null, {
+            message: "TagID incorrect, please try again"
+        })
+    }
+  } catch (e) {
+      callback(null, {
+          message: "An error occurred"
+      })
+  }  
+}
 
 //client-side streaming
 //once data from client is passed in, alert message is adjusted accordingly and returned to web browser
@@ -79,20 +127,14 @@ function shedData(call, callback){
 var news = [{category: "Weather", url: "Check Recent Storm Alerts"},{category: "System & Maintenance",url: "Check Smart Farming Updates"},{category: "Current News",url: "Check Latest News Articles"},{category: "Privacy & Legal",url: "Check Latest Cattle Regulation Changes"},{category: "Statistics",url: "Check 2023 CSO Statistics"}]
 
 function getNewsAlerts(call, callback) {
-  //var newsUpdate = setInterval(() => {
     for(var i = 0; i < news.length; i++){
         call.write({
           category: news[i].category,
           url: news[i].url,
         });
       }
-    //}, 2000);
-
   call.end()
-  //clearInterval(newsUpdate);
 }
-
-
 
 
 //bidirectional streaming*/
@@ -127,10 +169,12 @@ function grazingLocation(call, callback) {
   })
 }
 
+
 var server = new grpc.Server()
-server.addService(cattle_proto.ShedMonitoring.service, {shedData:shedData});
+server.addService(cattle_proto.CattleMonitoring.service, {shedData:shedData, cattleData:cattleData});
 server.addService(cattle_proto.GrazingMonitoring.service, {grazingLocation:grazingLocation});
 server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts});
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()
 })
+

@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package cattle;
 
-service ShedMonitoring {
-    rpc shedData(stream envData) returns (shedAction){}
+service CattleMonitoring {
+    rpc cattleData(cattleRequest) returns (cattleResponse) {}
+    rpc shedData(stream shedRequest) returns (shedResponse){}
 }
 
-message envData {
+message shedRequest {
     int32 temperature = 1;
     int32 humidity = 2;
     int32 waterQuality = 3; 
@@ -14,30 +15,30 @@ message envData {
     int32 ammonia = 5;
 }
 
-message shedAction {
+message shedResponse {
     string alertMessage = 1;
-    int32 tempIncrease = 2;
-    int32 tempDecrease = 3;
-    int32 activateDehumidifier = 4;
-    int32 deactivateDehumidifier = 5;
-    int32 addWater = 6;
-	int32 adjustFood = 7;
+}
+
+message cattleRequest {
+    sint32 tagId = 1;
+}
+
+message cattleResponse {
+    sint32 tagId = 1;
+    int32 age = 2;
+    int32 weight = 3;
+    string healthStatus = 4;
+    string heatDetection = 5;
 }
 
 service GrazingMonitoring {
-    rpc grazingLocation(stream vitals) returns (stream location) {}
-}
-
-message vitals {
-    string movement = 1;
-    string heartbeat = 2;
-    bool inactivityAlert = 3;
+    rpc grazingLocation(stream location) returns (stream location) {}
 }
 
 message location {
-    bool locationSafe = 1;
-    string locationAlert = 2;
-    bool mitigation = 3;
+    string name = 1;
+    string message = 2;
+    int32 location = 3;
 }
 
 service NewsAlerts {

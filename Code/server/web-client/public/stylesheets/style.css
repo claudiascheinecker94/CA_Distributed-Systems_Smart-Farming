@@ -36,7 +36,7 @@ td {
 #one{
   color:white;
   text-align: center;
-  width:30%;
+  width:25%;
   padding-top:1.5%;
   height:auto;
   float:left;
@@ -45,7 +45,7 @@ td {
 #two{
   color:white;
   text-align: center;
-  width:30%;
+  width:25%;
   padding-top:1.5%;
   height:auto;
   float:left;
@@ -53,7 +53,16 @@ td {
 #three{
   color:white;
   text-align: center;
-  width:30%;
+  width:25%;
+  padding-top:1.5%;
+  height:auto;
+  float:left;
+}
+
+#four{
+  color:white;
+  text-align: center;
+  width:25%;
   padding-top:1.5%;
   height:auto;
   float:left;
