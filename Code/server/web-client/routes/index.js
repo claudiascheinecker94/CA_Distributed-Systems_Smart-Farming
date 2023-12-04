@@ -27,35 +27,45 @@ router.get('/', function(req, res, next) {
           res.render('index', {title: 'Animal Welfare Check', error: error, tagId:response.tagId, age: response.age, weight: response.weight, healthStatus:response.healthStatus, heatDetection:response.heatDetection});
         } catch (error) {
           console.log(error);
-          res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information', age: null});
+          res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information'});
         }
       });
     } catch (error) {
       console.log(error);
-      res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information', age: null});
+      res.render('index', {title: 'Animal Welfare Check', error: 'Unable to look up information'});
     }
   } else {
-    res.render('index', {title: 'Animal Welfare Check', error: 'Awaiting Tag-ID', age: null});
+    res.render('index', {title: 'Animal Welfare Check', error: 'Awaiting Tag-ID'});
   }
 });
 
 //client-side streaming
+
 router.get('/shed', function(req, res, next) {
   
   var call = shed.shedData(function(error, response){
     if(error){
         console.log("An error occured")
     } else {
-        res.render('shed', {title: 'Shed Monitoring', error: error, alertMessage: response.alertMessage});
+        res.render('shed', {
+          title: 'Shed Monitoring', 
+          error: error, 
+          alertMessage: response.alertMessage, 
+          avgTemperature: response.avgTemperature, 
+          avgHumidity: response.avgHumidity,
+          avgWaterQuality: response.avgWaterQuality,
+          avgWaterQuantity: response.avgWaterQuantity,
+          avgAmmoniaLv: response.avgAmmoniaLv
+        });
     }
   })
 
   for(var i=0; i<5; i++){
-    var temperature = Math.random() * 40;
-    var humidity = Math.random() * 100;
-    var ammonia = Math.random() * 50;
-    var waterQuality = Math.random() * 2;
-    var waterQuantity = Math.random() * 10;
+    var temperature = Math.random() * (45 - 10) + 10;
+    var humidity = Math.random() * (80 - 40) + 40;
+    var ammonia = Math.random() * 100;
+    var waterQuality = Math.random() * 15;
+    var waterQuantity = Math.random() * 400;
       
     call.write({
           temperature: temperature,

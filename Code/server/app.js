@@ -56,23 +56,39 @@ function cattleData(call, callback){
 }
 
 //client-side streaming
-//once data from client is passed in, alert message is adjusted accordingly and returned to web browser
 function shedData(call, callback){
+
+  var temperature = 0;
+  var humidity = 0;
+  var waterQuality = 0;
+  var waterQuantity = 0;
+  var ammonia = 0;
 
   var tempIncrease = 0;
   var tempDecrease = 0;
   var activateDehumidifier = 0;
   var deactivateDehumidifier = 0;
+  var phAdjusted = 0;
   var addWater = 0;
   var adjustFood = 0;
   var alertMessage = "";
+  var dataCount = 0;
 
   call.on('data', function(request){
 
+    dataCount++;
+    temperature += request.temperature;
+    humidity += request.humidity;
+    waterQuality += request.waterQuality;
+    waterQuantity += request.waterQuantity;
+    ammonia += request.ammonia;
+
+
     if(request.temperature < 20){
       tempIncrease++;
-      if(tempIncrease > 3) {
+      if(tempIncrease > 2) {
         alertMessage += "temperature increased, ";
+        tempIncrease = 0;
       }
     } 
 
@@ -80,6 +96,7 @@ function shedData(call, callback){
       tempDecrease++;
       if(tempDecrease > 2) {
         alertMessage += "temperature decreased, ";
+        tempDecrease = 0;
       }
     }
     
@@ -87,20 +104,31 @@ function shedData(call, callback){
       activateDehumidifier++;
       if(activateDehumidifier > 2) {
         alertMessage += "dehumidifier activated, ";
+        activateDehumidifier = 0;
       }
     }
 
-    if(request.humidity < 40){
+    if(request.humidity < 50){
       deactivateDehumidifier++;
-      if(deactivateDehumidifier > 3) {
+      if(deactivateDehumidifier > 2) {
         alertMessage += "dehumidifier deactivated, ";
+        deactivateDehumidifier = 0;
       }
     }
 
-    if(request.waterQuality = 1 || request.waterQuantity < 4){
+    if(request.waterQuality > 9 || request.waterQuality < 5){
+      phAdjusted++;
+      if(phAdjusted > 4) {
+        alertMessage += "pH level adjusted, ";
+        phAdjusted = 0;
+      }
+    }
+
+    if(request.waterQuantity < 100){
       addWater++;
-      if(addWater > 6) {
-        alertMessage += "water checked, ";
+      if(addWater > 4) {
+        alertMessage += "water refilled, ";
+        addWater = 0;
       }
     }
 
@@ -108,13 +136,19 @@ function shedData(call, callback){
       adjustFood++;
       if(adjustFood > 2) {
         alertMessage += "food adjusted to combat ammonia, ";
+        adjustFood = 0;
       }
     }
   })
 
   call.on("end", function(){
     callback(null, {
-      alertMessage:alertMessage
+      alertMessage:alertMessage,
+      avgTemperature:(temperature/dataCount),
+      avgHumidity:(humidity/dataCount),
+      avgWaterQuality:(waterQuality/dataCount),
+      avgWaterQuantity:(waterQuantity/dataCount),
+      avgAmmoniaLv:(ammonia/dataCount)
     })
   })
 
