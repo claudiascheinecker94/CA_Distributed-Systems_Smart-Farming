@@ -12,6 +12,7 @@
     "@grpc/grpc-js": "^1.6.8",
     "@grpc/proto-loader": "^0.7.0",
     "eventsource": "^2.0.2",
+    "grpc-promise": "^1.4.0",
     "grpc-web": "^1.5.0"
   }
 }

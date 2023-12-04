@@ -4,7 +4,7 @@ package cattle;
 
 service CattleMonitoring {
     rpc cattleData(cattleRequest) returns (cattleResponse) {}
-    rpc shedData(stream shedRequest) returns (shedResponse){}
+    rpc shedData(stream shedRequest) returns (shedResponse) {}
 }
 
 message shedRequest {
@@ -48,6 +48,7 @@ message location {
 
 service NewsAlerts {
     rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
+    rpc getHistoricData(HistoricDataRequest) returns (stream HistoricDataResponse) {}
 }
 
 message NewsRequest{
@@ -57,3 +58,17 @@ message NewsResponse{
     string category = 1;
     string url = 2;
 }
+
+message HistoricDataRequest{
+}
+
+message HistoricDataResponse{
+    sint32 month = 1;
+    sint32 annualTemp = 2;
+    sint32 annualHum = 3;
+    sint32 wQuality = 4;
+    sint32 wQuantity = 5;
+    sint32 annualAmm = 6;
+    sint32 daysGrazing = 7;
+}
+

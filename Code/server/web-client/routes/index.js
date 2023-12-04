@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
+//const grpc_promise = require('grpc-promise');
 var readlineSync = require('readline-sync')
 
 var PROTO_PATH = __dirname + "/../protos/cattle.proto";
@@ -9,6 +10,7 @@ var packageDefinition = protoLoader.loadSync(PROTO_PATH);
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle;
 var shed = new cattle_proto.CattleMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var client = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
+//var history = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var location = new cattle_proto.GrazingMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 
 router.use((req, res, next) =>{
@@ -80,23 +82,34 @@ router.get('/shed', function(req, res, next) {
 });
 
 //server-side streaming
-router.get('/news', function(req, res, next) {
-  
-  var call = client.getNewsAlerts({});
-  var newsItems = [];
 
-  call.on('data', function(response){
-      newsItems.push({category: response.category, url:response.url});
-  });
+router.get('/news', async function(req, res, next) {
+  try {
+    var newsItems = await gatherData(client.getNewsAlerts({}));
+    var temp = await gatherData(client.getHistoricData({}));
 
-  call.on('end', function(){
-    res.render('news', {newsItems:newsItems});
-  });
-
-  call.on('error', function(e){
+    res.render('news', { newsItems, temp });
+  } catch (e) {
     console.log(e);
-  })
+    console.log('Could not fetch data.');
+  }
 });
+
+function gatherData(call) {
+  return new Promise((resolve, reject) => {
+    var data = [];
+    call.on('data', function(response) {
+      console.log(data);
+      data.push(response);
+    });
+    call.on('end', function() {
+      resolve(data);
+    });
+    call.on('error', function(error) {
+      reject(error);
+    });
+  });
+}
 
 //---bidirectional streaming---
 

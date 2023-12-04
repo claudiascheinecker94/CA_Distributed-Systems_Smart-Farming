@@ -7,7 +7,6 @@ var packageDefinition = protoLoader.loadSync(
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle
 
 //unary grpc
-
 function cattleData(call, callback){
 
   try{
@@ -56,13 +55,13 @@ function cattleData(call, callback){
 }
 
 //client-side streaming
-function shedData(call, callback){
+var temperature = 0;
+var humidity = 0;
+var waterQuality = 0;
+var waterQuantity = 0;
+var ammonia = 0;
 
-  var temperature = 0;
-  var humidity = 0;
-  var waterQuality = 0;
-  var waterQuantity = 0;
-  var ammonia = 0;
+function shedData(call, callback){
 
   var tempIncrease = 0;
   var tempDecrease = 0;
@@ -158,6 +157,7 @@ function shedData(call, callback){
 }
 
 //server-side streaming
+
 var news = [{category: "Weather", url: "Check Recent Storm Alerts"},{category: "System & Maintenance",url: "Check Smart Farming Updates"},{category: "Current News",url: "Check Latest News Articles"},{category: "Privacy & Legal",url: "Check Latest Cattle Regulation Changes"},{category: "Statistics",url: "Check 2023 CSO Statistics"}]
 
 function getNewsAlerts(call, callback) {
@@ -170,6 +170,35 @@ function getNewsAlerts(call, callback) {
   call.end()
 }
 
+var monthlyData = [];
+
+function getHistoricData(call, callback){
+  for(var i = 0; i < 12; i++){
+    let dataSet = {
+      temp:Math.floor(Math.random() * (45 - 10) + 10), 
+      hum:Math.floor(Math.random() * (80 - 40) + 40),
+      wQual:Math.floor(Math.random() * 15),
+      wQuan:Math.floor(Math.random() * 400),
+      amm:Math.floor(Math.random() * 100),
+      grazing: Math.floor(Math.random() * 365),
+    };
+    monthlyData.push(dataSet)
+    call.write({
+      annualTemp: monthlyData[i].temp,
+      annualHum: monthlyData[i].hum,
+      wQuality: monthlyData[i].wQual,
+      wQuantity: monthlyData[i].wQuan,
+      annualAmm: monthlyData[i].amm,
+      daysGrazing: monthlyData[i].grazing
+    });
+  }
+call.end()
+}
+
+module.exports = {
+  getNewsAlerts: getNewsAlerts,
+  getHistoricData: getHistoricData
+};
 
 //bidirectional streaming*/
 var cattles = {
@@ -207,7 +236,7 @@ function grazingLocation(call, callback) {
 var server = new grpc.Server()
 server.addService(cattle_proto.CattleMonitoring.service, {shedData:shedData, cattleData:cattleData});
 server.addService(cattle_proto.GrazingMonitoring.service, {grazingLocation:grazingLocation});
-server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts});
+server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData});
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()
 })

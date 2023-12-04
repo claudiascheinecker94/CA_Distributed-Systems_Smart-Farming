@@ -14,6 +14,7 @@
     "ejs": "~2.6.1",
     "eventsource": "^2.0.2",
     "express": "~4.16.1",
+    "grpc-promise": "^1.4.0",
     "grpc-web": "^1.5.0",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
