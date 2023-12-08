@@ -41,37 +41,29 @@
       <br>
       <br>
       <div>
-        <div>
-          <form action="/shed" method="get">
-            <input class="button" type="button" value="Get Air Conditions" onclick="document.getElementById('hidden').style.display = 'block' ;"/>
-          </form>
-        </div>
-        <br>
-        <button class="button"><a href="/water">Check Water Monitoring Page</a></button></a>
+        <form action="/water" method="get">
+          <input class="button" type="button" value="Get Water Conditions" onclick="document.getElementById('hidden').style.display = 'block' ;"/>
+        </form>
       </div>
       <br>
-      <br>
-      <br>
-      <br>
-      <div id="hidden">
-        <div id="text-part">
-          <b>Average Measurements of Today:</b>
-          <br>
-          <ul>
-            <li>Average Temperature: <%= avgTemperature %></li>
-            <li>Average Humidity: <%= avgHumidity %></li>
-            <li>Average Ammonia Level (in ppm): <%= avgAmmoniaLv %></li>
-          </ul>
-          <br>
-          <br>
-          <b>Automatic Actions Taken Today:</b>
-          <%= alertMessage %>
-        </div>
-      </div> 
+      <button class="button"><a href="/shed">Check Air Monitoring Page</a></button></a>
     </div>
     <br>
     <br>
     <br>
+    <div id="hidden">
+      <div id="text-part">
+        <b>Average Measurements of Today:</b>
+        <br>
+        <ul>
+            <li>Average Water Quality (pH): <%= avgWaterQuality %></li>
+            <li>Average Water Quantity (in l): <%= avgWaterQuantity %></li>
+        </ul>
+        <br>
+        <br>
+        <b>Automatic Actions Taken Today:</b>
+        <%= alertMessage %>
+      </div>
     </div> 
   </body>
 </html>

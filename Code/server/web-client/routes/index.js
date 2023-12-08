@@ -2,15 +2,12 @@ var express = require('express');
 var router = express.Router();
 var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
-//const grpc_promise = require('grpc-promise');
-var readlineSync = require('readline-sync')
 
 var PROTO_PATH = __dirname + "/../protos/cattle.proto";
 var packageDefinition = protoLoader.loadSync(PROTO_PATH);
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle;
 var shed = new cattle_proto.CattleMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
-var client = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
-//var history = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
+var client = new cattle_proto.NewsAndStatistics("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var location = new cattle_proto.GrazingMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 
 router.use((req, res, next) =>{
@@ -45,18 +42,16 @@ router.get('/', function(req, res, next) {
 
 router.get('/shed', function(req, res, next) {
   
-  var call = shed.shedData(function(error, response){
+  var call = shed.shedAirConditions(function(error, response){
     if(error){
         console.log("An error occured")
     } else {
         res.render('shed', {
-          title: 'Shed Monitoring', 
+          title: 'Air Monitoring', 
           error: error, 
           alertMessage: response.alertMessage, 
           avgTemperature: response.avgTemperature, 
           avgHumidity: response.avgHumidity,
-          avgWaterQuality: response.avgWaterQuality,
-          avgWaterQuantity: response.avgWaterQuantity,
           avgAmmoniaLv: response.avgAmmoniaLv
         });
     }
@@ -66,34 +61,72 @@ router.get('/shed', function(req, res, next) {
     var temperature = Math.random() * (45 - 10) + 10;
     var humidity = Math.random() * (80 - 40) + 40;
     var ammonia = Math.random() * 100;
-    var waterQuality = Math.random() * 15;
-    var waterQuantity = Math.random() * 400;
       
     call.write({
           temperature: temperature,
           humidity: humidity,
           ammonia: ammonia,
-          waterQuality: waterQuality,
-          waterQuantity: waterQuantity,
     })
   }
-  
   call.end();
 });
+
+router.get('/water', function(req, res, next) {
+  
+  var call = shed.shedWaterConditions(function(error, response){
+    if(error){
+        console.log("An error occured")
+    } else {
+        res.render('water', {
+          title: 'Water Monitoring', 
+          error: error, 
+          alertMessage: response.alertMessage, 
+          avgWaterQuality: response.avgWaterQuality,
+          avgWaterQuantity: response.avgWaterQuantity,
+        });
+    }
+  })
+
+  for(var i=0; i<5; i++){
+    var waterQuality = Math.random() * 15;
+    var waterQuantity = Math.random() * 400;
+      
+    call.write({
+      waterQuality: waterQuality,
+      waterQuantity: waterQuantity,
+    })
+  }
+  call.end();
+});
+
 
 //server-side streaming
 
 router.get('/news', async function(req, res, next) {
+
+  var topic = req.query.topic;
+  
   try {
     var newsItems = await gatherData(client.getNewsAlerts({}));
     var temp = await gatherData(client.getHistoricData({}));
 
-    res.render('news', { newsItems, temp });
+    var message;
+    client.futureTopics({topic:topic}, function(error, response){
+      if(error){
+        console.error("Error making gRPC call:", error);
+        return next(error);
+      } else {
+        message = response.message;
+        console.log(response.message);
+      }
+
+      res.render('news', { newsItems, temp, message});
+    });
   } catch (e) {
     console.log(e);
     console.log('Could not fetch data.');
   }
-});
+});  
 
 function gatherData(call) {
   return new Promise((resolve, reject) => {
@@ -111,7 +144,36 @@ function gatherData(call) {
   });
 }
 
-//---bidirectional streaming---
+router.get('/grazing', function(req, res, next){
+  var call = location.grazingTrends(function(error, response){
+
+    if(error){
+        console.log("An error occured")
+    } else {
+      res.render('grazing', {
+        title: 'Grazing Trends', 
+        error: error, 
+        avoidLocations: response.avoidLocations, 
+        safeLocations: response.safeLocations,
+      });
+    }
+  })
+
+  var location = [];
+  var time = [];
+  for(var i=0; i<=30; i++){
+    location.push(Math.floor(Math.random) * (10-1) + 1);
+    time.push(Math.floor(Math.random) * 5);
+      
+    call.write({
+          location: location,
+          time: time,
+    })
+  }
+  call.end();
+});
+
+//bidirectional streaming
 
 router.get('/location', function(req, res, next) {
   var name = "test";

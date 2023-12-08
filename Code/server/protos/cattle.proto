@@ -2,26 +2,10 @@ syntax = "proto3";
 
 package cattle;
 
-service CattleMonitoring {
-    rpc cattleData(cattleRequest) returns (cattleResponse) {}
-    rpc shedData(stream shedRequest) returns (shedResponse) {}
-}
-
-message shedRequest {
-    int32 temperature = 1;
-    int32 humidity = 2;
-    int32 waterQuality = 3; 
-    int32 waterQuantity = 4;
-    int32 ammonia = 5;
-}
-
-message shedResponse {
-    string alertMessage = 1;
-    int32 avgTemperature = 2;
-    int32 avgHumidity = 3;
-    int32 avgWaterQuality = 4;
-    int32 avgWaterQuantity = 5;
-    int32 avgAmmoniaLv = 6;
+service CattleMonitoring{
+    rpc cattleData (cattleRequest) returns (cattleResponse) {}
+	rpc shedAirConditions (stream airRequest) returns (airResponse) {}
+	rpc shedWaterConditions (stream waterRequest) returns (waterResponse) {}
 }
 
 message cattleRequest {
@@ -36,8 +20,45 @@ message cattleResponse {
     string heatDetection = 5;
 }
 
+message airRequest {
+    int32 temperature = 1;
+	int32 humidity = 2;
+	int32 ammonia = 3;
+}
+
+message airResponse {
+    string alertMessage = 1;
+    int32 avgTemperature = 2;
+	int32 avgHumidity = 3;
+	int32 avgAmmoniaLv = 4;
+	
+}
+
+message waterRequest {
+    int32 waterQuality = 1; 
+    int32 waterQuantity = 2;
+}
+
+message waterResponse {
+    string alertMessage = 1;
+    int32 avgWaterQuality = 2;
+    int32 avgWaterQuantity = 3;
+}
+
 service GrazingMonitoring {
+    rpc grazingTrends(stream trendRequest) returns (trendResponse) {}
+    //rpc grazingBlocklist (blockRequest) returns (blockResponse) {}
     rpc grazingLocation(stream location) returns (stream location) {}
+}
+
+message trendRequest {
+    int32 location = 1;
+    int32 time = 2;
+}
+
+message trendResponse {
+    int32 avoidLocations = 1;
+    int32 safeLocations = 2;
 }
 
 message location {
@@ -46,9 +67,19 @@ message location {
     int32 location = 3;
 }
 
-service NewsAlerts {
+
+service NewsAndStatistics {
+    rpc futureTopics (TopicRequest) returns (TopicResponse) {}
     rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
     rpc getHistoricData(HistoricDataRequest) returns (stream HistoricDataResponse) {}
+}
+
+message TopicRequest{
+    string topic = 1;
+}
+
+message TopicResponse{
+    string message = 1;
 }
 
 message NewsRequest{
@@ -71,4 +102,3 @@ message HistoricDataResponse{
     sint32 annualAmm = 6;
     sint32 daysGrazing = 7;
 }
-

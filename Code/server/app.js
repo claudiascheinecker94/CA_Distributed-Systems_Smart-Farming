@@ -6,6 +6,7 @@ var packageDefinition = protoLoader.loadSync(
 )
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle
 
+//Cattle Monitoring Service
 //unary grpc
 function cattleData(call, callback){
 
@@ -55,22 +56,18 @@ function cattleData(call, callback){
 }
 
 //client-side streaming
-var temperature = 0;
-var humidity = 0;
-var waterQuality = 0;
-var waterQuantity = 0;
-var ammonia = 0;
+function shedAirConditions(call, callback){
 
-function shedData(call, callback){
+  var temperature = 0;
+  var humidity = 0; 
+  var ammonia = 0;
+  var alertMessage = "";
 
   var tempIncrease = 0;
   var tempDecrease = 0;
   var activateDehumidifier = 0;
   var deactivateDehumidifier = 0;
-  var phAdjusted = 0;
-  var addWater = 0;
   var adjustFood = 0;
-  var alertMessage = "";
   var dataCount = 0;
 
   call.on('data', function(request){
@@ -78,8 +75,6 @@ function shedData(call, callback){
     dataCount++;
     temperature += request.temperature;
     humidity += request.humidity;
-    waterQuality += request.waterQuality;
-    waterQuantity += request.waterQuantity;
     ammonia += request.ammonia;
 
 
@@ -115,22 +110,6 @@ function shedData(call, callback){
       }
     }
 
-    if(request.waterQuality > 9 || request.waterQuality < 5){
-      phAdjusted++;
-      if(phAdjusted > 4) {
-        alertMessage += "pH level adjusted, ";
-        phAdjusted = 0;
-      }
-    }
-
-    if(request.waterQuantity < 100){
-      addWater++;
-      if(addWater > 4) {
-        alertMessage += "water refilled, ";
-        addWater = 0;
-      }
-    }
-
     if(request.ammonia > 40){
       adjustFood++;
       if(adjustFood > 2) {
@@ -145,8 +124,6 @@ function shedData(call, callback){
       alertMessage:alertMessage,
       avgTemperature:(temperature/dataCount),
       avgHumidity:(humidity/dataCount),
-      avgWaterQuality:(waterQuality/dataCount),
-      avgWaterQuantity:(waterQuantity/dataCount),
       avgAmmoniaLv:(ammonia/dataCount)
     })
   })
@@ -156,8 +133,79 @@ function shedData(call, callback){
   })
 }
 
-//server-side streaming
+function shedWaterConditions(call, callback){
+  var waterQuality = 0;
+  var waterQuantity= 0;
+  var alertMessage = "";
+  
+  var phAdjusted = 0;
+  var addWater = 0;
+  var dataCount = 0;
 
+  call.on('data', function(request){
+
+    dataCount++;
+    waterQuality += request.waterQuality;
+    waterQuantity += request.waterQuantity;
+
+    if(request.waterQuality > 9 || request.waterQuality < 5){
+      phAdjusted++;
+      if(phAdjusted > 2) {
+        alertMessage += "pH level adjusted, ";
+        phAdjusted = 0;
+      }
+    }
+
+    if(request.waterQuantity < 100){
+      addWater++;
+      if(addWater > 2) {
+        alertMessage += "water refilled, ";
+        addWater = 0;
+      }
+    }
+  })
+
+  call.on("end", function(){
+    callback(null, {
+      alertMessage:alertMessage,
+      avgWaterQuality:(waterQuality/dataCount),
+      avgWaterQuantity:(waterQuantity/dataCount),
+    })
+  })
+
+  call.on('error', function(e){
+    console.log(e)
+  })
+}
+
+//News And Statistics Service
+//unary grpc
+function futureTopics(call, callback){
+
+  try{
+    var topic = call.request.topic;
+    var topics = [];
+    topics.push(topic);
+
+    if(topic){
+        var message = "Thanks! We will send you updates about " + topic + " moving forward."
+
+        callback(null, {
+            message:message,
+        })
+    } else {
+        callback(null, {
+            message: "Please define a topic."
+        })
+    }
+  } catch (e) {
+      callback(null, {
+          message: "An error occurred"
+      })
+  }  
+}
+
+//server-side streaming
 var news = [{category: "Weather", url: "Check Recent Storm Alerts"},{category: "System & Maintenance",url: "Check Smart Farming Updates"},{category: "Current News",url: "Check Latest News Articles"},{category: "Privacy & Legal",url: "Check Latest Cattle Regulation Changes"},{category: "Statistics",url: "Check 2023 CSO Statistics"}]
 
 function getNewsAlerts(call, callback) {
@@ -200,7 +248,50 @@ module.exports = {
   getHistoricData: getHistoricData
 };
 
-//bidirectional streaming*/
+function grazingTrends(call, callback){
+
+  var location;
+  var time; 
+
+  call.on('data', function(request){
+    var sum;
+    const counts = {};
+
+    time.forEach(sumTime);
+    function sumTime(item){
+      sum+= item;
+    }
+
+    location.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+
+    var avoidLocations = [];
+    var safeLocations = [];
+    var maps = Object.values(counts);
+    var index = Object.keys(counts);
+
+    for(var i=0; i<index.length();i++){
+      for(var j=0; j<maps.length(); i++){
+        if (sum/map > 1){
+          avoidLocations.push(index);
+        } else {
+          safeLocations.push(index);
+        }
+      }
+    }
+  }) 
+  call.on("end", function(){
+    callback(null, {
+      avoidLocations:avoidLocations,
+      safeLocations:safeLocations,
+    })
+  })
+
+  call.on('error', function(e){
+    console.log(e)
+  })
+}
+
+//bidirectional streaming
 var cattles = {
 }
 
@@ -234,9 +325,9 @@ function grazingLocation(call, callback) {
 
 
 var server = new grpc.Server()
-server.addService(cattle_proto.CattleMonitoring.service, {shedData:shedData, cattleData:cattleData});
-server.addService(cattle_proto.GrazingMonitoring.service, {grazingLocation:grazingLocation});
-server.addService(cattle_proto.NewsAlerts.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData});
+server.addService(cattle_proto.CattleMonitoring.service, {cattleData:cattleData, shedAirConditions:shedAirConditions, shedWaterConditions:shedWaterConditions});
+server.addService(cattle_proto.GrazingMonitoring.service, {grazingTrends:grazingTrends,grazingLocation:grazingLocation});
+server.addService(cattle_proto.NewsAndStatistics.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData, futureTopics:futureTopics});
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()
 })
