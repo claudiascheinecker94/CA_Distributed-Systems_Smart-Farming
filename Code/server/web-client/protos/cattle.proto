@@ -47,18 +47,28 @@ message waterResponse {
 
 service GrazingMonitoring {
     rpc grazingTrends(stream trendRequest) returns (trendResponse) {}
-    //rpc grazingBlocklist (blockRequest) returns (blockResponse) {}
+    rpc grazingBlocklist (blockRequest) returns (blockResponse) {}
     rpc grazingLocation(stream location) returns (stream location) {}
 }
 
 message trendRequest {
-    int32 location = 1;
+    int32 grazingLocation = 1;
     int32 time = 2;
 }
 
 message trendResponse {
-    int32 avoidLocations = 1;
-    int32 safeLocations = 2;
+    string avoidLocations = 1;
+    string safeLocations = 2;
+}
+
+message blockRequest {
+    int32 tagId = 1;
+}
+
+message blockResponse {
+    int32 tagId = 1;
+    string loggedDate = 2;
+    int32 timeoutLength = 3;
 }
 
 message location {

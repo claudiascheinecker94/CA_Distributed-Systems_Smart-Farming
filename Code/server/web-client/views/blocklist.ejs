@@ -32,40 +32,41 @@
     <br>
     <br>
     <div id="text-part">
-      <p>Real time data is sent from various sensors installed within the cattle shed at regular intervals. Measurements are taken 5 times a day and responsive actions are automatically implemented daily to ensure that shed conditions remain at peek.</p>
-      <p>To see a daily summary of measurements and complementary actions taken, please click on the button below</p>
-      <% if(error) { %>
-        <%= error %>
-      <% } %>
+      <p>Health and welfare information of each animal is continously measured and stored to spot possible outbreaks of disease in its early stages. Fertility is strictly measured as well in order to time insemination.</p>
+      <p>To check on the health and welfare of the individual animal, please provide the tag id of the respective cattle.</p>
       <br>
       <br>
       <br>
       <div>
-        <form action="/water" method="get">
-          <input class="button" type="button" value="Get Water Conditions" onclick="document.getElementById('hidden').style.display = 'block' ;"/>
+        <form action="/blocklist" method="get">
+          <label for="tagId">Tag-ID</label>
+          <input type="number" name="tagId">
+          <button class="button" type="submit" onclick="">Add to Blocklist</button>
         </form>
       </div>
-      <br>
-      <button class="button"><a href="/shed">Check Air Monitoring Page</a></button></a>
     </div>
     <br>
     <br>
     <br>
-    <div id="hidden">
-      <div id="text-part">
-        <b>Average Measurements of Today:</b>
-        <br>
-        <ul>
-            <li>Average Water Quality (pH): <%= avgWaterQuality %></li>
-            <li>Average Water Quantity (in l): <%= avgWaterQuantity %></li>
-        </ul>
-        <br>
-        <br>
-        <b>Automatic Actions Taken Today:</b>
-        <%= alertMessage %>
-      </div>
-    </div> 
+    <div id="text-part">
+      <br>
+      <ul>
+      <% if(error) { %>
+        <li><%= error %></li>
+      <% } else { %>
+        <b>Successfully added to the blocklist</b>
+        <li>Tag-ID: <%= tagId %></li>
+        <li>Date Added: <%= loggedDate %></li>
+        <li>Duration of no grazing: <%= timeoutLength %></li>
+      </ul>
+      <ul>
+        <b>Full Blocklist</b>
+        <% for(var i = 0; i < blocklist.length; i++) { %>
+          <li><%= JSON.stringify(blocklist[i]) %></li>
+        <% } %>
+      </ul>
+       <%= message %>
+      <% } %>
+    </div>
   </body>
 </html>
-
-

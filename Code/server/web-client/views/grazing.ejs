@@ -12,7 +12,7 @@
     <div id="upper-bar">
       <div class="link" id="one"><a href="/">Cattle</a></div>
       <div class="link" id="two"><a href="/shed">Shed</a></div>
-      <div class="link" id="three"><a href="/location">Grazing</a></div>
+      <div class="link" id="three"><a href="/grazing">Grazing</a></div>
       <div class="link" id="four"><a href="/news">News</a></div>
     </div>
     <br>
@@ -39,22 +39,29 @@
       <br>
       <div>
         <form action="/grazing" method="get">
-          <button class="button" type="submit" onclick="">Get Grazing Trends</button>
+          <input class="button" type="button" value="Get Grazing Trends" onclick="document.getElementById('hidden').style.display = 'block' ;"/>
         </form>
+        <br>
+        <br>
+        <button class="button"><a href="/blocklist">Check Grazing Blocklist</a></button></a>
       </div>
     </div>
     <br>
     <br>
     <br>
-    <div id="text-part">
-      <b>Grazing Information:</b>
-      <br>
-      <ul><% if(error) { %>
-        <%= error %>
-      <% } else { %>
-        <li><%= avoidLocations %></li>
-        <li><%= safeLocations %></li>
-      <% } %></ul>
+    <div id="hidden">
+      <div id="text-part">
+        <b>Grazing Information:</b>
+        <br>
+        <ul>
+        <% if(error) { %>
+          <li><%= error %></li>
+        <% } else { %>
+          <li><%= avoidLocations %></li>
+          <li><%= safeLocations %></li>
+        <% } %>
+        </ul>
+      </div>
     </div>
   </body>
 </html>

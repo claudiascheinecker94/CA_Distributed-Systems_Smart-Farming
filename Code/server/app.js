@@ -249,12 +249,18 @@ module.exports = {
 };
 
 function grazingTrends(call, callback){
-
-  var location;
-  var time; 
+  var time = [];
+  var grazingLocation = [];
+  var avoidLocations;
+  var safeLocations;
 
   call.on('data', function(request){
-    var sum;
+    time.push(request.time);
+    grazingLocation.push(request.grazingLocation);
+  }) 
+
+  call.on("end", function(){
+    var sum = 0;
     const counts = {};
 
     time.forEach(sumTime);
@@ -262,24 +268,30 @@ function grazingTrends(call, callback){
       sum+= item;
     }
 
-    location.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+    grazingLocation.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
 
-    var avoidLocations = [];
-    var safeLocations = [];
+    //console.log(sum);
+    //console.log(grazingLocation);
+    //console.log(counts);
+
     var maps = Object.values(counts);
+    console.log(maps);
     var index = Object.keys(counts);
+    console.log(index);
 
-    for(var i=0; i<index.length();i++){
-      for(var j=0; j<maps.length(); i++){
-        if (sum/map > 1){
-          avoidLocations.push(index);
+    avoidLocations = "To be avoided: ";
+    safeLocations = "Safe to graze: ";
+    for(var i=0; i<index.length;i++){
+        if (sum/maps[i] > 24){
+          avoidLocations += " " + index[i];
         } else {
-          safeLocations.push(index);
+          safeLocations += " " + index[i];
         }
       }
-    }
-  }) 
-  call.on("end", function(){
+
+    //console.log("app.js avoidLocations: " + avoidLocations);
+    //console.log("app.js safeLocations: " + safeLocations);
+
     callback(null, {
       avoidLocations:avoidLocations,
       safeLocations:safeLocations,
@@ -289,6 +301,37 @@ function grazingTrends(call, callback){
   call.on('error', function(e){
     console.log(e)
   })
+}
+
+module.exports = grazingTrends;
+
+var blocklist = [];
+function grazingBlocklist(call, callback){
+
+  try{
+    var tagId = parseInt(call.request.tagId)
+    console.log(tagId);
+    if(!isNaN(tagId)){
+        blocklist.push({
+          tagId: tagId,
+          loggedDate: "" + new Date().toJSON(),
+          timeoutLength: Math.floor(Math.random() * 30)
+        });
+
+        console.log(blocklist);
+        console.log(blocklist[0].tagId);
+        console.log(blocklist[0].loggedDate);
+        console.log(blocklist[0].timeoutLength);
+
+        callback(null, {
+          tagId:blocklist[blocklist.length-1].tagId,
+          loggedDate:blocklist[blocklist.length-1].loggedDate,
+          timeoutLength:blocklist[blocklist.length-1].timeoutLength
+        })
+    } 
+  } catch (e) {
+      console.log(e);
+  }  
 }
 
 //bidirectional streaming
@@ -326,7 +369,7 @@ function grazingLocation(call, callback) {
 
 var server = new grpc.Server()
 server.addService(cattle_proto.CattleMonitoring.service, {cattleData:cattleData, shedAirConditions:shedAirConditions, shedWaterConditions:shedWaterConditions});
-server.addService(cattle_proto.GrazingMonitoring.service, {grazingTrends:grazingTrends,grazingLocation:grazingLocation});
+server.addService(cattle_proto.GrazingMonitoring.service, {grazingTrends:grazingTrends,grazingBlocklist:grazingBlocklist,grazingLocation:grazingLocation});
 server.addService(cattle_proto.NewsAndStatistics.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData, futureTopics:futureTopics});
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()

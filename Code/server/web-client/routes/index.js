@@ -144,35 +144,84 @@ function gatherData(call) {
   });
 }
 
+//client-side streaming
 router.get('/grazing', function(req, res, next){
   var call = location.grazingTrends(function(error, response){
 
+    console.log("index.js avoidLocations: " + response.avoidLocations);
+    console.log("index.js safeLocations: " + response.safeLocations);
+
     if(error){
-        console.log("An error occured")
+      console.log("An error occured")
     } else {
-      res.render('grazing', {
-        title: 'Grazing Trends', 
-        error: error, 
-        avoidLocations: response.avoidLocations, 
-        safeLocations: response.safeLocations,
+    res.render('grazing', {
+      title: 'Grazing Trends', 
+      error: error, 
+      avoidLocations: response.avoidLocations, 
+      safeLocations: response.safeLocations,
       });
     }
-  })
+  });
 
-  var location = [];
-  var time = [];
+  var grazingLocation;
+  var time;
   for(var i=0; i<=30; i++){
-    location.push(Math.floor(Math.random) * (10-1) + 1);
-    time.push(Math.floor(Math.random) * 5);
+    grazingLocation = (Math.floor(Math.random() * (10-1) + 1));
+    time = (Math.floor(Math.random() * 5));
       
     call.write({
-          location: location,
-          time: time,
+      grazingLocation: grazingLocation,
+      time: time,
     })
   }
   call.end();
 });
 
+var message = "";
+function removeValueAfterTimeout(array) {
+    setTimeout(() => {
+      array.splice(0, 1);
+      message = "Removed " + array[0].tagId + " from the blocklist"
+    }, 15000);
+}
+
+var blocklist = []
+
+//unary streaming
+router.get('/blocklist', function(req, res, next) {
+  var tagId = req.query.tagId;
+  console.log(tagId);
+
+  if (tagId >= 1) {
+    try {
+      location.grazingBlocklist({tagId: tagId}, function (error, response) {
+        console.log(response.tagId);
+        blocklist.push({
+          tagId: response.tagId,
+          loggedDate: response.loggedDate,
+          timeoutLength: response.timeoutLength
+        });
+
+        //need to revisit
+        removeValueAfterTimeout(blocklist);
+
+        res.render('blocklist', {
+          title:'Grazing Blocklist', 
+          error:error, 
+          tagId:response.tagId, 
+          loggedDate:response.loggedDate,
+          timeoutLength: response.timeoutLength,
+          blocklist,
+          message
+        });
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    res.render('blocklist', {title: 'Grazing Blocklist', error: 'Awaiting Tag-ID'});
+  }
+});
 //bidirectional streaming
 
 router.get('/location', function(req, res, next) {
