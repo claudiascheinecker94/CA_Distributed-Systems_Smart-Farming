@@ -35,15 +35,17 @@
       <p>Health and welfare information of each animal is continously measured and stored to spot possible outbreaks of disease in its early stages. Fertility is strictly measured as well in order to time insemination.</p>
       <p>To check on the health and welfare of the individual animal, please provide the tag id of the respective cattle.</p>
       <br>
-      <br>
-      <br>
       <div>
         <form action="/grazing" method="get">
           <input class="button" type="button" value="Get Grazing Trends" onclick="document.getElementById('hidden').style.display = 'block' ;"/>
         </form>
         <br>
+        <button class="button"><a href="/grazingblocklist">Add animal to blocklist</a></button>
         <br>
-        <button class="button"><a href="/blocklist">Check Grazing Blocklist</a></button></a>
+        <br>
+        <button class="button"><a href="/grazinglocation">Stream grazing live location</a></button>
+        <br>
+        <br>
       </div>
     </div>
     <br>
@@ -57,8 +59,8 @@
         <% if(error) { %>
           <li><%= error %></li>
         <% } else { %>
-          <li><%= avoidLocations %></li>
-          <li><%= safeLocations %></li>
+          <li>Locations to be avoided: <%= avoidLocations %></li>
+          <li>Locations safe to visit for the next grazing period: <%= safeLocations %></li>
         <% } %>
         </ul>
       </div>

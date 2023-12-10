@@ -27,7 +27,7 @@ message airRequest {
 }
 
 message airResponse {
-    string alertMessage = 1;
+    string airAlertMessage = 1;
     int32 avgTemperature = 2;
 	int32 avgHumidity = 3;
 	int32 avgAmmoniaLv = 4;
@@ -40,7 +40,7 @@ message waterRequest {
 }
 
 message waterResponse {
-    string alertMessage = 1;
+    string waterAlertMessage = 1;
     int32 avgWaterQuality = 2;
     int32 avgWaterQuantity = 3;
 }
