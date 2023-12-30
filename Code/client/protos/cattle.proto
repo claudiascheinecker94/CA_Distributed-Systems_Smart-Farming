@@ -2,40 +2,94 @@ syntax = "proto3";
 
 package cattle;
 
-service ShedMonitoring {
-    rpc shedData(stream envData) returns (shedAction){}
+service CattleMonitoring{
+    rpc cattleData (cattleRequest) returns (cattleResponse) {}
+	rpc shedAirConditions (stream airRequest) returns (airResponse) {}
+	rpc shedWaterConditions (stream waterRequest) returns (waterResponse) {}
 }
 
-message envData {
+message cattleRequest {
+    sint32 tagId = 1;
+}
+
+message cattleResponse {
+    sint32 tagId = 1;
+    int32 age = 2;
+    int32 weight = 3;
+    string healthStatus = 4;
+    string heatDetection = 5;
+}
+
+message airRequest {
     int32 temperature = 1;
-    int32 humidity = 2;
-    string waterQuality = 3; 
-    int32 waterQuantity = 4;
-    int32 ammonia = 5;
+	int32 humidity = 2;
+	int32 ammonia = 3;
 }
 
-message shedAction {
-    string alertMessage = 1;
-    int32 tempIncrease = 2;
-    int32 tempDecrease = 3;
-    int32 activateDehumidifier = 4;
-    int32 deactivateDehumidifier = 5;
-    int32 addWater = 6;
-	int32 adjustFood = 7;
+message airResponse {
+    string airAlertMessage = 1;
+    int32 avgTemperature = 2;
+	int32 avgHumidity = 3;
+	int32 avgAmmoniaLv = 4;
+	
+}
+
+message waterRequest {
+    int32 waterQuality = 1; 
+    int32 waterQuantity = 2;
+}
+
+message waterResponse {
+    string waterAlertMessage = 1;
+    int32 avgWaterQuality = 2;
+    int32 avgWaterQuantity = 3;
 }
 
 service GrazingMonitoring {
+    rpc grazingTrends(stream trendRequest) returns (trendResponse) {}
+    rpc grazingBlocklist (blockRequest) returns (blockResponse) {}
     rpc grazingLocation(stream location) returns (stream location) {}
 }
 
+message trendRequest {
+    int32 grazingLocation = 1;
+    int32 time = 2;
+}
+
+message trendResponse {
+    string avoidLocations = 1;
+    string safeLocations = 2;
+}
+
+message blockRequest {
+    int32 tagId = 1;
+}
+
+message blockResponse {
+    int32 tagId = 1;
+    string loggedDate = 2;
+    int32 timeoutLength = 3;
+}
+
 message location {
-    string name =1;
+    string name = 1;
     string message = 2;
     int32 location = 3;
 }
 
-service NewsAlerts {
+
+service NewsAndStatistics {
+    rpc futureTopics (TopicRequest) returns (TopicResponse) {}
     rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
+    rpc getHistoricData(HistoricDataRequest) returns (stream HistoricDataResponse) {}
+}
+
+message TopicRequest{
+    string topic = 1;
+}
+
+message TopicResponse{
+    string message = 1;
 }
 
 message NewsRequest{
@@ -43,5 +97,18 @@ message NewsRequest{
 
 message NewsResponse{
     string category = 1;
-    string news = 2;
+    string url = 2;
+}
+
+message HistoricDataRequest{
+}
+
+message HistoricDataResponse{
+    sint32 month = 1;
+    sint32 annualTemp = 2;
+    sint32 annualHum = 3;
+    sint32 wQuality = 4;
+    sint32 wQuantity = 5;
+    sint32 annualAmm = 6;
+    sint32 daysGrazing = 7;
 }

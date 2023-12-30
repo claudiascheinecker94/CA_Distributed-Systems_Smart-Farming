@@ -195,7 +195,7 @@ function gatherData(call) {
 ** Once the tagId is detected at a specific location, the stream ends as the herd is back in the shed. 
 */
 
-
+//Might need to change this to server-side streaming??
 router.get('/grazing', function(req, res, next){
   //client-side streaming passing grazingLocation and time to the server on a daily basis for the past 30 days.
   var call = location.grazingTrends(function(error, response){
@@ -314,18 +314,6 @@ router.get('/grazinglocation', function(req, res, next) {
       console.log("Cannot connect to server")
   });
 
-  // Create a WebSocket connection for this specific request
-  /*const io = socketIO(req.app.server);
-
-  io.on('connection', (socket) => {
-    console.log('User connected');
-
-    socket.on('disconnect', () => {
-      console.log('User disconnected');
-      clearInterval(locationUpdate);
-    });
-  });*/
-
   //send initial message after tagId was detected
   call.write({
     message: name + " started grazing",
@@ -362,66 +350,5 @@ router.get('/grazinglocation', function(req, res, next) {
     }
   }, 2000); 
 });
-
-/*router.get('/grazinglocation', function(req, res, next) {
-  
-  //logging tagID of cattle that leaves shed, either automatically or per user input
-  var name = "test";
-  //var name = req.query.name;
-
-  //bidirectional streaming grpc
-  var call = location.grazingLocation();
-
-  //rendering information to the screen in real-time
-  call.on('data', function(response) {
-    //res.render('location', {title: 'Location', name:response.name, message:response.message, location:response.location});
-    console.log(response.message + " at location " + response.location)
-  });
-
-  //once stream ends (cattle is at a set location), the interval is cleared
-  call.on('end', function(){
-    clearInterval(locationUpdate);
-  });
-
-  //error validation
-  call.on("error", function(e){
-      console.log("Cannot connect to server")
-  });
-
-  //send initial message after tagId was detected
-  call.write({
-    message: name + " started grazing",
-    name:name,
-    location:0,
-  });
-
-  //setting up interval to send location updates every 2 seconds
-  var locationUpdate = setInterval(() => {
-  //location is randomly generated and based on location number is deemed safe, dangerous or the end of the route.
-  var location = Math.random() *10;
-
-    call.write({
-      message: name + " is safely grazing",
-      name: name,
-      location: location,
-    });
-    if(location >=7 && location <=8){
-      call.write({
-        message: name + " entered dangerous territory (mitigation efforts in place)",
-        location:location,
-        name: name,
-      })
-    }
-    if(location >= 9){
-      call.write({
-          message: name + " finished grazing",
-          location:location,
-          name: name,
-      });
-      call.end();
-      clearInterval(locationUpdate);
-    }
-  }, 2000); 
-});*/
 
 module.exports = router;

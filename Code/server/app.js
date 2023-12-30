@@ -213,7 +213,7 @@ function shedWaterConditions(call, callback){
 * a server-side stream (getHistoricData) which streams sensor data saved on the server from the past year to the client upon request*/
 
 //unary grpc
-function futureTopics(call, callback){
+function productionExemption(call, callback){
 
   //error validation
   try{
@@ -221,12 +221,12 @@ function futureTopics(call, callback){
     var topic = call.request.topic;
 
     //saving the passed in variable within an array
-    var topics = [];
-    topics.push(topic);
+    var outputExclude = [];
+    outputExclude.push(outputExclude);
 
     //if the variable topic exists, a confirmation message is sent back to the client.
-    if(topic){
-        var message = "Thanks! We will send you updates about " + topic + " moving forward."
+    if(!isNaN(outputExclude) && outputExclude > 0){
+        var message = "Thanks! We will exclude ID " + topic + " from the milk cycle today."
 
         callback(null, {
             message:message,
@@ -234,7 +234,7 @@ function futureTopics(call, callback){
     } else {
         //if not, the user is prompted to define a topic.
         callback(null, {
-            message: "Please define a topic."
+            message: "Please add a Tag-ID"
         })
     }
   } catch (e) {
@@ -267,6 +267,7 @@ function getNewsAlerts(call, callback) {
 var monthlyData = [];
 
 //generating random datasets and pushing them into an array
+//!!!!!!possibly add interval here????!!!!!!
 function getHistoricData(call, callback){
   for(var i = 0; i < 12; i++){
     let dataSet = {
@@ -306,6 +307,7 @@ module.exports = {
 */
 
 //client-side stream
+//!! ---I think I need to change this to server-side streaming---!! Maybe??
 function grazingTrends(call, callback){
   var time = [];
   var grazingLocation = [];
@@ -413,7 +415,6 @@ function grazingBlocklist(call, callback){
 
 
 var cattles = {}
-
 function grazingLocation(call, callback) {
   call.on('data', function(locationMsg){
 
@@ -449,7 +450,7 @@ var server = new grpc.Server()
 //adding the grpc services to the server
 server.addService(cattle_proto.CattleMonitoring.service, {cattleData:cattleData, shedAirConditions:shedAirConditions, shedWaterConditions:shedWaterConditions});
 server.addService(cattle_proto.GrazingMonitoring.service, {grazingTrends:grazingTrends,grazingBlocklist:grazingBlocklist,grazingLocation:grazingLocation});
-server.addService(cattle_proto.NewsAndStatistics.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData, futureTopics:futureTopics});
+server.addService(cattle_proto.NewsAndStatistics.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData, productionExemption:productionExemption});
 
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()

@@ -79,16 +79,16 @@ message location {
 
 
 service NewsAndStatistics {
-    rpc futureTopics (TopicRequest) returns (TopicResponse) {}
+    rpc productionExemption (ExemptionRequest) returns (ExemptionResponse) {}
     rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
     rpc getHistoricData(HistoricDataRequest) returns (stream HistoricDataResponse) {}
 }
 
-message TopicRequest{
-    string topic = 1;
+message ExemptionRequest{
+    int32 exclude = 1;
 }
 
-message TopicResponse{
+message ExemptionResponse{
     string message = 1;
 }
 
