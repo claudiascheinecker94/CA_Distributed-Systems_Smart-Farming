@@ -78,9 +78,9 @@ message location {
 }
 
 
-service NewsAndStatistics {
+service DiaryMonitoring {
     rpc productionExemption (ExemptionRequest) returns (ExemptionResponse) {}
-    rpc getNewsAlerts(NewsRequest) returns (stream NewsResponse) {}
+    rpc getDiaryOutput(stream DiaryRequest) returns (DiaryResponse) {}
     rpc getHistoricData(HistoricDataRequest) returns (stream HistoricDataResponse) {}
 }
 
@@ -92,12 +92,17 @@ message ExemptionResponse{
     string message = 1;
 }
 
-message NewsRequest{
+message DiaryRequest{
+    sint32 milkOutput = 1;
+    sint32 cattleWeight = 2;
 }
 
-message NewsResponse{
-    string category = 1;
-    string url = 2;
+//https://protobuf.dev/programming-guides/proto3/ using "repeated" field type to pass array from server to client
+message DiaryResponse{
+    sint32 totalMilkOutput = 1;
+    sint32 totalCattleWeight = 2;
+    repeated sint32  problematicMilkOutput = 3;
+    repeated sint32  problematicCattleWeight = 4;
 }
 
 message HistoricDataRequest{
@@ -105,10 +110,8 @@ message HistoricDataRequest{
 
 message HistoricDataResponse{
     sint32 month = 1;
-    sint32 annualTemp = 2;
-    sint32 annualHum = 3;
-    sint32 wQuality = 4;
-    sint32 wQuantity = 5;
-    sint32 annualAmm = 6;
-    sint32 daysGrazing = 7;
+    sint32 annualDiaryOutput = 2;
+    sint32 annualCattleWeight = 3;
+    sint32 individualMilkOutput = 4;
+    sint32 daysGrazing = 5;
 }

@@ -206,86 +206,89 @@ function shedWaterConditions(call, callback){
   })
 }
 
-/***News & Statistics Service***
+/***Diary Monitoring Service***
 * consists of:
-* a unary function (futureTopics) that passes a user input (topic) to the server to be saved for future news alerts. A confirmation message is passed back to the client. 
-* a server-side stream (getNewsAlert) which streams an array of news articles from the server to the client.
+* a unary function (productionExemption) that passes a user input (tag-ID) to the server to be included for production exemption to make sure the automatic milkers are not applied to those animals for the day. The animal is automatically removed from exemption after 24 hours.
+* a client-side stream (getDiaryOutput) which receives streams about the diary output per animal in the morning and the respective weight during milking, so the server can calculate the daily production as well as identify potential problem areas. 
 * a server-side stream (getHistoricData) which streams sensor data saved on the server from the past year to the client upon request*/
+
+var outputExclude = [];
 
 //unary grpc
 function productionExemption(call, callback){
 
   //error validation
   try{
-    //receiving the topic variable from the client
-    var topic = call.request.topic;
+    //receiving the tag-ID of the animal to be excluded from the client 
+    var exclude = call.request.exclude;
 
-    //saving the passed in variable within an array
-    var outputExclude = [];
-    outputExclude.push(outputExclude);
+    //saving the passed-in variable within an array in addition to the timestamp when it was passed in (as it will automatically be removed after 24 hours)
+    outputExclude.push({
+      exclude: exclude,
+      timeLogged: Date.now()
+    });
 
-    //if the variable topic exists, a confirmation message is sent back to the client.
-    if(!isNaN(outputExclude) && outputExclude > 0){
-        var message = "Thanks! We will exclude ID " + topic + " from the milk cycle today."
+    //list of exemptions before the automatic removal after 24 hours
+    console.log(outputExclude);
+
+    //removing values after 24 hours
+    //got inspiration here - https://stackoverflow.com/questions/50066309/how-to-auto-remove-elements-out-of-an-array-after-x-minutes-in-javascript
+    function dailyReset(array) {
+      var time = Date.now();
+      console.log(time);
+      if(array.length > 1){
+        if(time > (array.timeLogged + 10)) //24 hours past would be (array.timeLogged + 86400000), but keeping a smaller number for testing
+        console.log(array.timeLogged);
+        setTimeout(() => {
+          array.splice(0, 1);
+        }, 2000 );//24 hours would be 86,400,000 milliseconds, but keeping a smaller interval for testing
+      }   
+    }
+
+    dailyReset(outputExclude);
+
+    //list of exemptions before the automatic removal after 24 hours
+    console.log(outputExclude);
+
+    //if exclude exists, a confirmation message is sent back to the client.
+    if(exclude){
+        var message = "Thanks! We will exclude ID " + exclude + " from the milk cycle today."
 
         callback(null, {
             message:message,
         })
+
     } else {
-        //if not, the user is prompted to define a topic.
+        //if not, the user is prompted to define a tag ID.
         callback(null, {
             message: "Please add a Tag-ID"
         })
     }
   } catch (e) {
       callback(null, {
-          message: "An error occurred"
+          message: e
       })
   }  
 }
 
 //server-side streaming
-var news = [
-  {category: "Weather", url: "Check Recent Storm Alerts"},
-  {category: "System & Maintenance",url: "Check Smart Farming Updates"},
-  {category: "Current News",url: "Check Latest News Articles"},
-  {category: "Privacy & Legal",url: "Check Latest Cattle Regulation Changes"},
-  {category: "Statistics",url: "Check 2023 CSO Statistics"}]
-
-//traversing through an array of news articles and URLs to pass back to the client
-function getNewsAlerts(call, callback) {
-    for(var i = 0; i < news.length; i++){
-        call.write({
-          category: news[i].category,
-          url: news[i].url,
-        });
-      }
-  call.end()
-}
-
-//server-side streaming
 var monthlyData = [];
 
-//generating random datasets and pushing them into an array
-//!!!!!!possibly add interval here????!!!!!!
+//generating random datasets for annual milk production, cattle weight, individual milk output and grazing days and pushing them into an array
 function getHistoricData(call, callback){
   for(var i = 0; i < 12; i++){
     let dataSet = {
-      temp:Math.floor(Math.random() * (45 - 10) + 10), 
-      hum:Math.floor(Math.random() * (80 - 40) + 40),
-      wQual:Math.floor(Math.random() * 15),
-      wQuan:Math.floor(Math.random() * 400),
-      amm:Math.floor(Math.random() * 100),
+      diary:Math.floor(Math.random() * (45 - 10) + 10), 
+      weight:Math.floor(Math.random() * (80 - 40) + 40),
+      individual:Math.floor(Math.random() * 3),
       grazing: Math.floor(Math.random() * 365),
     };
     monthlyData.push(dataSet)
     //after every loop the dataSet is streamed to the client
     call.write({
-      annualTemp: monthlyData[i].temp,
-      annualHum: monthlyData[i].hum,
-      wQuality: monthlyData[i].wQual,
-      wQuantity: monthlyData[i].wQuan,
-      annualAmm: monthlyData[i].amm,
+      annualDiaryOutput: monthlyData[i].diary,
+      annualCattleWeight: monthlyData[i].weight,
+      individualMilkOutput: monthlyData[i].individual,
       daysGrazing: monthlyData[i].grazing
     });
   }
@@ -293,10 +296,59 @@ function getHistoricData(call, callback){
 call.end()
 }
 
-module.exports = {
-  getNewsAlerts: getNewsAlerts,
-  getHistoricData: getHistoricData
-};
+//client-side streaming
+function getDiaryOutput(call, callback){
+
+  //variables for computation
+  var totalMilkOutput = 0;
+  var totalCattleWeight = 0;
+  var cowNum = 0;
+  var problematicMilkOutput = [];
+  var problematicCattleWeight = [];
+
+  call.on('data', function(request){
+
+    //summing up the data stream coming from the client
+    totalMilkOutput += request.milkOutput;
+    totalCattleWeight += request.cattleWeight;
+    cowNum ++;
+
+    /*checking if daily milk output per cattle was satisfactory, if not problem areas will be passed back to the client.
+    * For example, if the milk output per cattle was below 1 liter, the tagID of the cattle is passed back so a manual examination for the animal can be taken place.  
+    * Or if the cattle's weight is below/above a certain threshold, the client is also alerted.
+    */
+
+    if(request.milkOutput < 1){
+      problematicMilkOutput.push(cowNum);
+    }
+
+    if(request.cattleWeight < 100 || request.cattleWeight > 400){
+      problematicCattleWeight.push(cowNum)
+    }
+  })
+
+  //once the stream ends, we pass through the daily data of milk output and weight distribution along with the found problem areas. 
+  call.on("end", function(){
+    /*logging data to the console for troubleshooting
+      console.log(
+      totalMilkOutput,
+      totalCattleWeight,
+      problematicMilkOutput,
+      problematicCattleWeight
+    )*/
+    callback(null, {
+      totalMilkOutput: totalMilkOutput,
+      totalCattleWeight: totalCattleWeight,
+      problematicMilkOutput: problematicMilkOutput,
+      problematicCattleWeight: problematicCattleWeight,
+    })
+  })
+
+  //error logging
+  call.on('error', function(e){
+    console.log(e)
+  })
+}
 
 /***Grazing Monitoring Service***
 * consists of:
@@ -306,8 +358,7 @@ module.exports = {
 ** Once the tagId is detected at a specific location, the stream ends as the herd is back in the shed. 
 */
 
-//client-side stream
-//!! ---I think I need to change this to server-side streaming---!! Maybe??
+//client-side stream streaming
 function grazingTrends(call, callback){
   var time = [];
   var grazingLocation = [];
@@ -316,7 +367,7 @@ function grazingTrends(call, callback){
 
   call.on('data', function(request){
 
-    //stream of data from the client is pushed into an array within the server.
+    //stream of monthly data from the client is pushed into an array within the server.
     time.push(request.time);
     grazingLocation.push(request.grazingLocation);
   }) 
@@ -333,24 +384,29 @@ function grazingTrends(call, callback){
     }
 
     //the duplicated elements within the grazingLocation array are counted and passed into the counts{} object, so we can determine which locations have been visited more than once. 
+    //reference - https://stackoverflow.com/questions/19395257/how-to-count-duplicate-value-in-an-array-in-javascript
     grazingLocation.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
 
-    //console.log(sum);
-    //console.log(grazingLocation);
-    //console.log(counts);
+    //logging to console for troubleshooting
+    console.log(sum);
+    console.log(grazingLocation);
+    console.log(counts);
 
     //the values (number of duplicates) from the counts{} object are safed in a separate maps variable.
+    //reference - https://www.javascripttutorial.net/es-next/javascript-object-values/
     var maps = Object.values(counts);
     console.log(maps);
 
-     //the keys (locations) from the counts{} object are safed in a separate index variable.
+    //the keys (locations) from the counts{} object are safed in a separate index variable.
+    //reference - https://www.w3schools.com/jsref/jsref_object_keys.asp
     var index = Object.keys(counts);
     console.log(index);
 
     avoidLocations = "";
     safeLocations = "";
-    //calculating if the amount of time spent per location is more than 24 hours (assuming and equal distribution of time per location)
-    //if one are has been grazed on for more than 24 hours in the past month, it is added as an "avoidLocation"
+
+    //calculating if the amount of time spent per location is more than 24 hours (assuming and equal distribution of time per location, to simplify the calculation)
+    //if one location has been grazed on for more than 24 hours in the past month, it is added as an "avoidLocation" variable
     for(var i=0; i<index.length;i++){
         if (sum/maps[i] > 24){
           avoidLocations += " " + index[i];
@@ -374,8 +430,6 @@ function grazingTrends(call, callback){
   })
 }
 
-module.exports = grazingTrends;
-
 //unary grpc
 var blocklist = [];
 function grazingBlocklist(call, callback){
@@ -393,10 +447,11 @@ function grazingBlocklist(call, callback){
           timeoutLength: Math.floor(Math.random() * 30)
         });
 
+        /* Printing the data out on the console for troubleshooting
         console.log(blocklist);
         console.log(blocklist[0].tagId);
         console.log(blocklist[0].loggedDate);
-        console.log(blocklist[0].timeoutLength);
+        console.log(blocklist[0].timeoutLength);*/
 
         //we pass back the last entry to the array to the client
         callback(null, {
@@ -411,9 +466,7 @@ function grazingBlocklist(call, callback){
 }
 
 //bidirectional streaming
-
-
-
+//see client folder
 var cattles = {}
 function grazingLocation(call, callback) {
   call.on('data', function(locationMsg){
@@ -450,7 +503,7 @@ var server = new grpc.Server()
 //adding the grpc services to the server
 server.addService(cattle_proto.CattleMonitoring.service, {cattleData:cattleData, shedAirConditions:shedAirConditions, shedWaterConditions:shedWaterConditions});
 server.addService(cattle_proto.GrazingMonitoring.service, {grazingTrends:grazingTrends,grazingBlocklist:grazingBlocklist,grazingLocation:grazingLocation});
-server.addService(cattle_proto.NewsAndStatistics.service, {getNewsAlerts:getNewsAlerts, getHistoricData:getHistoricData, productionExemption:productionExemption});
+server.addService(cattle_proto.DiaryMonitoring.service, {getDiaryOutput:getDiaryOutput, getHistoricData:getHistoricData, productionExemption:productionExemption});
 
 server.bindAsync("0.0.0.0:40000", grpc.ServerCredentials.createInsecure(), function() {
   server.start()

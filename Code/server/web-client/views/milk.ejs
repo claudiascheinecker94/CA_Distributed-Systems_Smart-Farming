@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Milk</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </head>
+  <body>
+
+    <div id="upper-bar">
+      <div class="link" id="one"><a href="/">Cattle</a></div>
+      <div class="link" id="two"><a href="/shed">Shed</a></div>
+      <div class="link" id="three"><a href="/grazing">Grazing</a></div>
+      <div class="link" id="four"><a href="/milk">Diary Output</a></div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <h1>Diary Production Exemption</h1>
+    <br>
+    <br>
+    <div id="text-part">
+      <p>At times cattle needs to be excluded from the daily milking cycle.</p>
+      <p>Please put in the Tag-ID of the animal excluded in tomorrow's milk cycle (the animal will be removed automatically after 24 hours):</p>
+      <div>
+        <form action="/milk" method="get">
+          <label for="exclude">Exclude</label>
+          <input type="number" name="exclude">
+          <button class="button" type="submit">Exclude from Milk Cycle</button>
+        </form>
+      </div>
+      <br>
+      <b><%= message %></b>
+      <br>
+      <br>
+      <br>
+      <button class="button"><a href="/milkoutput">Check daily diary output</a></button>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <h1>Diary Output Statistics</h1>
+    <br>
+    <div>
+      <div class="chartLeft">
+        <canvas id="annualDiaryOutputChart"></canvas>
+        <script>
+        var xValues = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var diaryData = JSON.parse(`<%- JSON.stringify(diaryData) %>`);
+        var yValues = [];
+          for(var i = 0; i < diaryData.length; i++){
+            yValues.push(diaryData[i].annualDiaryOutput);
+          }
+        const barColors = ["red","white","blue","yellow","brown","purple","black", "turquoise", "pink", "orange", "beige", "green"];
+  
+        new Chart("annualDiaryOutputChart", {
+          type: "bar",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            legend: {display: false},
+            title: {
+              display: true,
+              text: "Monthly Milk Output 2023 (in l)"
+            }
+          }
+        });
+        </script>
+      </div>
+      <div class="chartRight">
+        <canvas id="annualCattleWeight" class="chart"></canvas>
+        <script>
+        var yValues = [];
+          for(var i = 0; i < diaryData.length; i++){
+            yValues.push(diaryData[i].annualCattleWeight);
+          }
+
+        new Chart("annualCattleWeight", {
+          type: "bar",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            legend: {display: false},
+            title: {
+              display: true,
+              text: "Aggregated Cattle Weight 2023 (in kg)"
+            }
+          }
+        });
+        </script> 
+      </div>
+      <div class="chartLeft">
+        <canvas id="individualMilkOutputChart"></canvas>
+        <script>
+        var yValues = [];
+          for(var i = 0; i < diaryData.length; i++){
+            yValues.push(diaryData[i].individualMilkOutput);
+          }
+
+        new Chart("individualMilkOutputChart", {
+          type: "bar",
+          data: {
+            labels: ["Cow 1", "Cow 2", "Cow 3", "Cow 4", "Cow 5", "Cow 6", "Cow 7", "Cow 8", "Cow 9", "Cow 10", "Cow 11", "Cow 12"],
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            legend: {display: false},
+            title: {
+              display: true,
+              text: "Annual Milk Output per Animal in 2023 (in l)"
+            }
+          }
+        });
+        </script> 
+      </div>
+      <div class="chartRight">
+        <canvas id="grazingChart"></canvas>
+        <script>
+        var yValues = [];
+          for(var i = 0; i < diaryData.length; i++){
+            yValues.push(diaryData[i].daysGrazing);
+          }
+
+        new Chart("grazingChart", {
+          type: "bar",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            legend: {display: false},
+            title: {
+              display: true,
+              text: "Grazing Activity (in days)"
+            }
+          }
+        });
+        </script> 
+      </div>
+    </div> 
+  </body>
+</html>

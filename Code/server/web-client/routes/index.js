@@ -8,7 +8,7 @@ var PROTO_PATH = __dirname + "/../protos/cattle.proto";
 var packageDefinition = protoLoader.loadSync(PROTO_PATH);
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle;
 var shed = new cattle_proto.CattleMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
-var client = new cattle_proto.NewsAndStatistics("0.0.0.0:40000",  grpc.credentials.createInsecure());
+var client = new cattle_proto.DiaryMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var location = new cattle_proto.GrazingMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 
 /***Cattle Monitoring Service***
@@ -108,6 +108,7 @@ router.get('/shed', function(req, res, next) {
 
   //error validation
   //once data has returned from the server, it is saved in a respective array per function and rendered on the webpage
+  //used this as reference to implement Promise.all() - https://stackoverflow.com/questions/33073509/promise-all-then-resolve
   try{
     Promise.all([airPromise, waterPromise])
       .then(function(data){
@@ -133,36 +134,34 @@ router.get('/shed', function(req, res, next) {
   } 
 });
 
-/***News & Statistics Service***
+/***Diary Monitoring Service***
 * consists of:
-* a unary function (futureTopics) to request topics the user would like to be informed about in the future and saving the information on the server, we then return a confirmation or error message for the user.
-* a server-side stream (getNewsAlert) which stream an array of news articles from the server to the client and display them on the /news page.
+* a unary function (productionExemption) to exempt an animal from the daily milking cycle for various reasons, here the tag-id is passed to the server for processing.
+* a client-side stream (getDiaryOutput) which streams each animals current weight and milk output to the server after the milk cycle has finished, the server will then compute the necessary data (total output + problem areas to address).
 * a server-side stream (getHistoricData) which streams sensor data saved on the server from the past year to the client, which will be rendered as charts on /news for analytical purposes. 
 */
 
-router.get('/news', async function(req, res, next) {
+router.get('/milk', async function(req, res, next) {
 
   //requesting user input from news.js (topic)
-  var topic = req.query.topic;
+  var exclude = req.query.exclude;
   
   //error validation
   try {
-    //awaiting function gatherData() for each server-side stream to ensure the server-side stream finishes streaming first before res.render is called
-    var newsItems = await gatherData(client.getNewsAlerts({}));
-    var temp = await gatherData(client.getHistoricData({}));
+    //awaiting function gatherData() for server-side stream to ensure the server-side stream finishes streaming first before res.render is called
+    var diaryData = await gatherData(client.getHistoricData({}));
 
     //unary grpc passing the requested topic from the client to the server, returning a confirmation message that topic was saved for future news alerts. 
     var message;
-    client.futureTopics({topic:topic}, function(error, response){
+    client.productionExemption({exclude:exclude}, function(error, response){
       if(error){
         console.error(error);
-        return next(error);
       } else {
         message = response.message;
         console.log(response.message);
       }
-      //rendering the server responses for all three methods to the webpage (/news)
-      res.render('news', { newsItems, temp, message});
+      //rendering the server responses for both methods to the webpage (/milk)
+      res.render('milk', {diaryData, message});
     });
   } catch (e) {
     console.log(e);
@@ -171,6 +170,7 @@ router.get('/news', async function(req, res, next) {
 });  
 
 //creating a new promise, saving all data passed from the server into an array, once stream is finished promise is resolved or rejected
+//https://www.freecodecamp.org/news/javascript-promise-tutorial-how-to-resolve-or-reject-promises-in-js/
 function gatherData(call) {
   return new Promise((resolve, reject) => {
     var data = [];
@@ -187,6 +187,55 @@ function gatherData(call) {
   });
 }
 
+router.get('/milkoutput', function(req, res, next) {
+  //error validation
+  try {
+    //client-side grpc passing continous milk output per cow and current cattle weight during daily milk cycle
+    var call = client.getDiaryOutput(function(error, response){
+      if(error){
+          console.log("An error occured")
+      } else {
+          /*Checking passed data in console first for troubleshooting if rendered incorrectly
+            console.log(
+            response.totalMilkOutput,
+            response.totalCattleWeight,
+            response.problematicMilkOutput,
+            response.problematicCattleWeight,
+          )*/
+          res.render('milkoutput', {
+            error:error,
+            totalMilkOutput:response.totalMilkOutput, 
+            totalCattleWeight: response.totalCattleWeight,
+            problematicMilkOutput: response.problematicMilkOutput,
+            problematicCattleWeight: response.problematicCattleWeight
+          });
+        }
+    });
+  
+    /*
+    * computing relevant data for current milking cycle (individual cattle milk output + cattle weight).
+    * This data is then passed on the server to calculate daily output and check which animals need extra care as weight or milk output standards are not met. 
+    */ 
+    for(var i=0; i<12; i++){
+      var milkOutput = Math.random() * 3;
+      var cattleWeight = Math.random() * 400;
+      
+      //sending data to server
+      call.write({
+        milkOutput: milkOutput,
+        cattleWeight: cattleWeight,
+      })
+    }
+
+    call.end();
+  
+  //error validation
+  } catch (e) {
+    console.log(e);
+    console.log('Could not fetch data.');
+  }
+});  
+
 /***Grazing Monitoring Service***
 * consists of:
 * a client-side stream (grazingTrends) that passes on all locations the cattle has visited during grazing in the past 30 days as well as the overall time detected that the cattle was outside the shed grazing to the server.
@@ -195,7 +244,7 @@ function gatherData(call) {
 ** Once the tagId is detected at a specific location, the stream ends as the herd is back in the shed. 
 */
 
-//Might need to change this to server-side streaming??
+//client-side streaming
 router.get('/grazing', function(req, res, next){
   //client-side streaming passing grazingLocation and time to the server on a daily basis for the past 30 days.
   var call = location.grazingTrends(function(error, response){
@@ -220,7 +269,7 @@ router.get('/grazing', function(req, res, next){
   var grazingLocation;
   var time;
   for(var i=0; i<=30; i++){
-    grazingLocation = (Math.floor(Math.random() * (10-1) + 1));
+    grazingLocation = (Math.floor(Math.random() * (11-1) + 1));
     time = (Math.floor(Math.random() * 5));
     
     //passing data to the server after each loop
