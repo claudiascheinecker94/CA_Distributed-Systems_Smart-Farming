@@ -278,9 +278,9 @@ var monthlyData = [];
 function getHistoricData(call, callback){
   for(var i = 0; i < 12; i++){
     let dataSet = {
-      diary:Math.floor(Math.random() * (45 - 10) + 10), 
-      weight:Math.floor(Math.random() * (80 - 40) + 40),
-      individual:Math.floor(Math.random() * 3),
+      diary:Math.floor(Math.random() * (800 - 100) + 100), 
+      weight:Math.floor(Math.random() * (1000 - 200) + 200),
+      individual:Math.floor(Math.random() * 40),
       grazing: Math.floor(Math.random() * 365),
     };
     monthlyData.push(dataSet)

@@ -32,8 +32,8 @@
     <br>
     <br>
     <div id="text-part">
-      <p>Health and welfare information of each animal is continously measured and stored to spot possible outbreaks of disease in its early stages. Fertility is strictly measured as well in order to time insemination.</p>
-      <p>To check on the health and welfare of the individual animal, please provide the tag id of the respective cattle.</p>
+      <p>Extended grazing periods are essential for high quality diary output and peak cattle health. In order to ensure environmental standards are met, the grazing area is separated in 10 geo locations.</p>
+      <p>Based on real-time tracking, a monthly overutilisation per area can be determined. Based on that, please find all areas that were overutilised below. These areas should be avoided in the next grazing period to make sure that environmental standards remain high.</p>
       <br>
       <div>
         <form action="/grazing" method="get">
@@ -59,11 +59,10 @@
         <% if(error) { %>
           <li><%= error %></li>
         <% } else { %>
-          <li>Locations to be avoided: <%= avoidLocations %></li>
+          <li>Locations to be avoided due to overutilisation: <%= avoidLocations %></li>
           <li>Locations safe to visit for the next grazing period: <%= safeLocations %></li>
         <% } %>
         </ul>
-        <img src="Code/server/web-client/public/images/Screenshot 2023-12-30 at 21.52.19.png" alt="map">
       </div>
     </div>
   </body>
