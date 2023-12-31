@@ -6,8 +6,8 @@ var PROTO_PATH = __dirname + "/protos/cattle.proto"
 
 var packageDefinition = protoLoader.loadSync(PROTO_PATH)
 var cattle_proto = grpc.loadPackageDefinition(packageDefinition).cattle
-var client = new cattle_proto.ShedMonitoring("0.0.0.0:40000", grpc.credentials.createInsecure());
-var news = new cattle_proto.NewsAlerts("0.0.0.0:40000",  grpc.credentials.createInsecure());
+//var client = new cattle_proto.CattleMonitoring("0.0.0.0:40000", grpc.credentials.createInsecure());
+//var news = new cattle_proto.DiaryMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 var location = new cattle_proto.GrazingMonitoring("0.0.0.0:40000",  grpc.credentials.createInsecure());
 
 
